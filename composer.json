@@ -19,7 +19,8 @@
     }
     ,"autoload": {
   "psr-4": {
-      "QUI\\Composer\\": "src/QUI/Composer"
+      "QUI\\Composer\\": "src/QUI/Composer",
+      "QUI\\Composer\\Interfaces\\": "src/QUI/Composer/Interfaces"
    }
 }
 
