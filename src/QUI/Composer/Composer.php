@@ -30,13 +30,13 @@ class Composer implements QUI\Composer\Interfaces\Composer
     }
 
 
-    public function update($options)
+    public function update($options = array())
     {
         $this->Runner->update($options);
     }
 
 
-    public function install($options)
+    public function install($options = array())
     {
         $this->Runner->install($options);
     }
