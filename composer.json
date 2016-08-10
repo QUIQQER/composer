@@ -15,7 +15,7 @@
         "url": "http://www.pcsg.de"
     },
     "require": {
-        
+        "composer/composer": "^1.1.0"
     }
     ,"autoload": {
   "psr-4": {
