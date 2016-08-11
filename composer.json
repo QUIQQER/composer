@@ -1,27 +1,35 @@
+{
+  "name": "quiqqer/composer",
+  "type": "quiqqer-module",
+  "description": "Composer API für Quiqqer",
+  "version": "dev-dev",
+  "license": "GPL-3.0+",
+  "authors": [
     {
-    "name" : "quiqqer/composer",
-    "type" : "quiqqer-module",
-    "description" : "Composer API für Quiqqer",
-    "version" : "dev-dev",
-    "license" : "GPL-3.0+",
-    "authors" : [{
-        "name": "Florian Bogner",
-        "email": "f.bogner@pcsg.de",
-        "homepage": "http://www.pcsg.de",
-        "role": "Developer"
-    }],
-    "support" : {
-        "email": "support@pcsg.de",
-        "url": "http://www.pcsg.de"
-    },
-    "require": {
-        "composer/composer": "^1.1.0"
+      "name": "Florian Bogner",
+      "email": "f.bogner@pcsg.de",
+      "homepage": "http://www.pcsg.de",
+      "role": "Developer"
     }
-    ,"autoload": {
-  "psr-4": {
+  ],
+  "support": {
+    "email": "support@pcsg.de",
+    "url": "http://www.pcsg.de"
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://update.quiqqer.com/"
+    }
+  ],
+  "require": {
+    "composer/composer": "^1.1.0",
+    "quiqqer\/utils": "dev-dev"
+  },
+  "autoload": {
+    "psr-4": {
       "QUI\\Composer\\": "src/QUI/Composer",
       "QUI\\Composer\\Interfaces\\": "src/QUI/Composer/Interfaces"
-   }
-}
-
+    }
+  }
 }
