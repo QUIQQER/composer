@@ -75,7 +75,6 @@ class Web implements QUI\Composer\Interfaces\Composer
             $package .= ":" . $version;
         }
 
-
         $params = array(
             "command"       => "require",
             "packages"      => array($package),

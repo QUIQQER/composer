@@ -6,7 +6,7 @@ class ComposerTest extends \PHPUNIT\Framework\TestCase
 {
 
     private $directory;
-    private $mode = ComposerTest::MODE_AUTO;
+    private $mode = ComposerTest::MODE_WEB;
 
     private $testPackages = array(
         'testRequire'  => array(
@@ -154,16 +154,18 @@ class ComposerTest extends \PHPUNIT\Framework\TestCase
         switch ($this->mode) {
             case self::MODE_AUTO:
                 $Composer = new \QUI\Composer\Composer($this->directory);
+                echo "Using Composer in " . ($Composer->getMode() == \QUI\Composer\Composer::MODE_CLI ? "CLI" : "Web") . " mode." . PHP_EOL;
                 break;
             case self::MODE_WEB:
                 $Composer = new \QUI\Composer\Web($this->directory);
+                echo "Using Composer in forced-Web mode." . PHP_EOL;
                 break;
             case self::MODE_CLI:
                 $Composer = new \QUI\Composer\CLI($this->directory);
+                echo "Using Composer in forced-CLI mode." . PHP_EOL;
                 break;
         }
 
-        echo "Using Composer in " . ($Composer->getMode() == \QUI\Composer\Composer::MODE_CLI ? "CLI" : "Web") . " mode." . PHP_EOL;
 
         return $Composer;
     }
