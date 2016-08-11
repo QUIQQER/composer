@@ -2,7 +2,9 @@
 
 namespace QUITests\Composer;
 
-class ComposerTest extends \PHPUNIT\Framework\TestCase
+use PHPUnit\Framework\TestCase;
+
+class ComposerTest extends TestCase
 {
 
     private $directory;
