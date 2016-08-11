@@ -32,6 +32,7 @@ class Web implements QUI\Composer\Interfaces\Composer
 
     public function install($options = array())
     {
+        chdir($this->workingDir);
         $params = array(
             "command"       => "install",
             "--prefer-dist" => true,
@@ -45,12 +46,14 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $this->Application->run($Input, $Output);
 
+        $this->Application->resetComposer();
         return $Output->getLines();
     }
 
 
     public function update($options = array())
     {
+        chdir($this->workingDir);
         $params = array(
             "command"       => "update",
             "--prefer-dist" => true,
@@ -65,12 +68,15 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $this->Application->run($Input, $Output);
 
+
+        $this->Application->resetComposer();
         return $Output->getLines();
     }
 
 
     public function requirePackage($package, $version = "")
     {
+        chdir($this->workingDir);
         if (!empty($version)) {
             $package .= ":" . $version;
         }
@@ -86,11 +92,14 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $this->Application->run($Input, $Output);
 
+
+        $this->Application->resetComposer();
         return $Output->getLines();
     }
 
     public function outdated($direct)
     {
+        chdir($this->workingDir);
         $params = array(
             "command"       => "show",
             "--working-dir" => $this->workingDir,
@@ -124,6 +133,8 @@ class Web implements QUI\Composer\Interfaces\Composer
             }
         }
 
+
+        $this->Application->resetComposer();
         return $packages;
     }
 
