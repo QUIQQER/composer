@@ -16,11 +16,18 @@ class Composer implements QUI\Composer\Interfaces\Composer
     /** @var QUI\Composer\Interfaces\Composer */
     private $Runner;
 
+    /**
+     * @inheritdoc
+     * Composer constructor.
+     * Can be used as general accespoint to composer.
+     * Will use CLI composer if shell_exec is available
+     * @param string $workingDir
+     */
     public function __construct($workingDir)
     {
 
 
-        if (QUI\Utils\System::isShellFunctionEnabled('ls')) {
+        if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
             $this->Runner = new CLI($workingDir);
 
             return;
@@ -32,18 +39,28 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
     public function update($options = array())
     {
-        $this->Runner->update($options);
+        return $this->Runner->update($options);
     }
 
 
     public function install($options = array())
     {
-        $this->Runner->install($options);
+        return $this->Runner->install($options);
     }
 
 
-    public function requirePackage($package, $version)
+    public function requirePackage($package, $version = "")
     {
-        $this->Runner->requirePackage($package, $version);
+        return $this->Runner->requirePackage($package, $version);
+    }
+
+    public function outdated($direct)
+    {
+        return $this->Runner->outdated($direct);
+    }
+
+    public function updatesAvailable($direct)
+    {
+        return $this->Runner->updatesAvailable($direct);
     }
 }
