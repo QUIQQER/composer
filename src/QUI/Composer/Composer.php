@@ -13,8 +13,12 @@ use QUI;
  */
 class Composer implements QUI\Composer\Interfaces\Composer
 {
+    const MODE_CLI = 0;
+    const MODE_WEB = 1;
+
     /** @var QUI\Composer\Interfaces\Composer */
     private $Runner;
+    private $mode;
 
     /**
      * @inheritdoc
@@ -29,11 +33,12 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
         if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
             $this->Runner = new CLI($workingDir);
-
+            $this->mode = self::MODE_CLI;
             return;
         }
 
         $this->Runner = new Web($workingDir);
+        $this->mode = self::MODE_WEB;
     }
 
 
@@ -62,5 +67,10 @@ class Composer implements QUI\Composer\Interfaces\Composer
     public function updatesAvailable($direct)
     {
         return $this->Runner->updatesAvailable($direct);
+    }
+
+    public function getMode()
+    {
+        return $this->mode;
     }
 }

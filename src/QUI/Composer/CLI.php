@@ -84,6 +84,10 @@ class CLI implements QUI\Composer\Interfaces\Composer
             $result = shell_exec("composer outdated 2>&1");
         }
 
+
+        # Replace all backspaces by newline feeds (Composer uses backspace (Ascii 8) to seperate lines)
+        $result = preg_replace("#[\b]+#", "\n", $result);
+
         $lines = explode(PHP_EOL, $result);
         $regex = "~ +~";
 
@@ -93,7 +97,9 @@ class CLI implements QUI\Composer\Interfaces\Composer
             $line = preg_replace($regex, " ", $line);
             $words = explode(" ", $line);
 
-            $packages[] = $words[0];
+            if ($words[0] != "" && !empty($words[0]) && substr($words[0], 0, 1) != chr(8) && $words[0] != "Reading") {
+                $packages[] = $words[0];
+            }
         }
 
         return $packages;
