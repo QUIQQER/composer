@@ -1,6 +1,6 @@
 <?php
 
-namespace QUI\Composer;
+namespace QUITests\Composer;
 
 class ComposerTest extends \PHPUNIT\Framework\TestCase
 {
@@ -20,7 +20,7 @@ class ComposerTest extends \PHPUNIT\Framework\TestCase
         'testUpdate'   => array(
             'name'     => "sebastian/version",
             'version'  => "1.0.0",
-            'version2' => "2.0.0"
+            'version2' => "1.0.6"
         )
     );
 
@@ -41,7 +41,7 @@ class ComposerTest extends \PHPUNIT\Framework\TestCase
             mkdir($this->directory, 0777, true);
         }
         $this->createJson();
-        echo "Using Directory :" . $this->directory . PHP_EOL;
+        $this->writePHPUnitLog("Using Directory :" . $this->directory);
     }
 
     public function tearDown()
@@ -106,7 +106,9 @@ class ComposerTest extends \PHPUNIT\Framework\TestCase
 
         $json = json_encode($data, JSON_PRETTY_PRINT);
         file_put_contents($this->directory . "/composer.json", $json);
-        $Composer->update();
+
+        $result = $Composer->update();
+
 
         # ===================
 
@@ -130,9 +132,9 @@ class ComposerTest extends \PHPUNIT\Framework\TestCase
         $containsPackage = false;
         foreach ($packages as $i => $pckg) {
             $name = $pckg['name'];
-            if ($name ==  $this->testPackages['testUpdate']['name']) {
+            if ($name == $this->testPackages['testUpdate']['name']) {
                 $containsPackage = true;
-                $index = $i;
+                $index           = $i;
             }
         }
         $this->assertTrue($containsPackage);
@@ -154,15 +156,15 @@ class ComposerTest extends \PHPUNIT\Framework\TestCase
         switch ($this->mode) {
             case self::MODE_AUTO:
                 $Composer = new \QUI\Composer\Composer($this->directory);
-                echo "Using Composer in " . ($Composer->getMode() == \QUI\Composer\Composer::MODE_CLI ? "CLI" : "Web") . " mode." . PHP_EOL;
+                $this->writePHPUnitLog("Using Composer in " . ($Composer->getMode() == \QUI\Composer\Composer::MODE_CLI ? "CLI" : "Web") . " mode.");
                 break;
             case self::MODE_WEB:
                 $Composer = new \QUI\Composer\Web($this->directory);
-                echo "Using Composer in forced-Web mode." . PHP_EOL;
+                $this->writePHPUnitLog("Using Composer in forced-Web mode.");
                 break;
             case self::MODE_CLI:
                 $Composer = new \QUI\Composer\CLI($this->directory);
-                echo "Using Composer in forced-CLI mode." . PHP_EOL;
+                $this->writePHPUnitLog("Using Composer in forced-CLI mode.");
                 break;
         }
 
@@ -221,5 +223,15 @@ JSON;
         }
         closedir($dir);
         rmdir($src);
+    }
+
+    private function writePHPUnitLogError($msg)
+    {
+        fwrite(STDERR, print_r($msg, true) . PHP_EOL);
+    }
+
+    private function writePHPUnitLog($msg)
+    {
+        fwrite(STDOUT, print_r($msg, true) . PHP_EOL);
     }
 }
