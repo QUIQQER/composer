@@ -25,7 +25,7 @@ class Web implements QUI\Composer\Interfaces\Composer
             throw new \Exception("Workingdirectory does not exist", 404);
         }
 
-        if (!file_exists($workingDir . "/composer.json")) {
+        if (!file_exists($composerDir . "composer.json")) {
             throw new \Exception("Composer.json not found", 404);
         }
 

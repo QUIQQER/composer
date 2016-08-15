@@ -29,8 +29,6 @@ class Composer implements QUI\Composer\Interfaces\Composer
      */
     public function __construct($workingDir,$composerDir="")
     {
-
-
         if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
             $this->Runner = new CLI($workingDir,$composerDir);
             $this->mode = self::MODE_CLI;
