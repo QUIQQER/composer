@@ -7,8 +7,9 @@ use PHPUnit\Framework\TestCase;
 class ComposerTest extends TestCase
 {
 
-    private $directory;
-    private $mode = ComposerTest::MODE_WEB;
+    private $workingDir;
+    private $composerDir;
+    private $mode = ComposerTest::MODE_CLI;
 
     private $testPackages = array(
         'testRequire'  => array(
@@ -37,20 +38,36 @@ class ComposerTest extends TestCase
     public function setUp()
     {
         parent::setUp();
-        $this->directory = "/tmp/composerTest/" . md5(date("dmYHis") . mt_rand(0, 10000000));
+        $this->workingDir  = "/tmp/composerTest/" . md5(date("dmYHis") . mt_rand(0, 10000000));
+        $this->composerDir = $this->workingDir . "/composer/";
 
-        if (!is_dir($this->directory)) {
-            mkdir($this->directory, 0777, true);
+
+        if (!is_dir($this->workingDir)) {
+            mkdir($this->workingDir, 0777, true);
         }
+
+        if ($this->mode == self::MODE_CLI) {
+            if (!is_dir($this->composerDir)) {
+                mkdir($this->composerDir, 0777, true);
+            }
+
+            if (!is_file($this->composerDir . "/composer.phar")) {
+                copy(
+                    dirname(dirname(dirname(dirname(__FILE__)))) . "/lib/composer.phar",
+                    $this->composerDir . "/composer.phar"
+                );
+            }
+        }
+
         $this->createJson();
-        $this->writePHPUnitLog("Using Directory :" . $this->directory);
+        $this->writePHPUnitLog("Workingdirectory :" . $this->workingDir . "  ComposerDir:" . $this->composerDir);
     }
 
     public function tearDown()
     {
         parent::tearDown();
 
-        $this->foreceRemoveDir($this->directory);
+        $this->foreceRemoveDir($this->workingDir);
     }
     # =============================================
     # Tests
@@ -65,9 +82,9 @@ class ComposerTest extends TestCase
             $this->testPackages['testRequire']['version']
         );
 
-        $this->assertFileExists($this->directory . "/vendor/psr/log/README.md");
+        $this->assertFileExists($this->workingDir . "/vendor/psr/log/README.md");
 
-        $json = file_get_contents($this->directory . "/composer.json");
+        $json = file_get_contents($this->workingDir . "/composer.json");
         $data = json_decode($json, true);
 
 
@@ -101,13 +118,13 @@ class ComposerTest extends TestCase
             $this->testPackages['testOutdated']['version']
         );
 
-        $json = file_get_contents($this->directory . "/composer.json");
+        $json = file_get_contents($this->workingDir . "/composer.json");
         $data = json_decode($json);
 
         $data->require->{$this->testPackages['testUpdate']['name']} = $this->testPackages['testUpdate']['version2'];
 
         $json = json_encode($data, JSON_PRETTY_PRINT);
-        file_put_contents($this->directory . "/composer.json", $json);
+        file_put_contents($this->workingDir . "/composer.json", $json);
 
         $result = $Composer->update();
 
@@ -124,7 +141,7 @@ class ComposerTest extends TestCase
         );
 
         #Check if correct version is in composer.lock
-        $json     = file_get_contents($this->directory . "/composer.lock");
+        $json     = file_get_contents($this->workingDir . "/composer.lock");
         $data     = json_decode($json, true);
         $packages = $data['packages'];
 
@@ -157,15 +174,15 @@ class ComposerTest extends TestCase
         $Composer = null;
         switch ($this->mode) {
             case self::MODE_AUTO:
-                $Composer = new \QUI\Composer\Composer($this->directory);
+                $Composer = new \QUI\Composer\Composer($this->workingDir, $this->composerDir);
                 $this->writePHPUnitLog("Using Composer in " . ($Composer->getMode() == \QUI\Composer\Composer::MODE_CLI ? "CLI" : "Web") . " mode.");
                 break;
             case self::MODE_WEB:
-                $Composer = new \QUI\Composer\Web($this->directory);
+                $Composer = new \QUI\Composer\Web($this->workingDir, $this->composerDir);
                 $this->writePHPUnitLog("Using Composer in forced-Web mode.");
                 break;
             case self::MODE_CLI:
-                $Composer = new \QUI\Composer\CLI($this->directory);
+                $Composer = new \QUI\Composer\CLI($this->workingDir, $this->composerDir);
                 $this->writePHPUnitLog("Using Composer in forced-CLI mode.");
                 break;
         }
@@ -207,7 +224,7 @@ class ComposerTest extends TestCase
 }
 JSON;
 
-        file_put_contents($this->directory . "/composer.json", $template);
+        file_put_contents($this->workingDir . "/composer.json", $template);
     }
 
     private function foreceRemoveDir($src)
