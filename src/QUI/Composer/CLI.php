@@ -8,9 +8,18 @@ class CLI implements QUI\Composer\Interfaces\Composer
 {
 
     protected $workingDir;
+    protected $composerDir;
 
-    public function __construct($workingDir)
+    public function __construct($workingDir,$composerDir="")
     {
+        if(empty($composerDir)){
+            $this->composerDir = $workingDir;
+        }else{
+            $this->composerDir = $composerDir;
+        }
+
+        putenv("COMPOSER_HOME=" . $this->composerDir);
+
         $this->workingDir = rtrim($workingDir, "/");
         if (!is_dir($workingDir)) {
             throw new \Exception("Workingdirectory does not exist", 404);
@@ -24,7 +33,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
     public function install($options = array())
     {
         chdir($this->workingDir);
-        $result = shell_exec("composer install 2>&1");
+        $result = shell_exec("php {$this->composerDir}/composer.phar --working-dir={$this->workingDir} install 2>&1");
         $lines  = array();
         # Parse output into array and remove empty lines
         if (!empty($result)) {
@@ -40,7 +49,8 @@ class CLI implements QUI\Composer\Interfaces\Composer
     public function update($options = array())
     {
         chdir($this->workingDir);
-        $result = shell_exec("composer update 2>&1");
+        echo PHP_EOL."EXECUTING :php {$this->composerDir}/composer.phar --working-dir={$this->workingDir} update 2>&1";
+        $result = shell_exec("php {$this->composerDir}/composer.phar --working-dir={$this->workingDir} update 2>&1");
         # Parse output into array and remove empty lines
         $lines = array();
         if (!empty($result)) {
@@ -62,7 +72,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
         }
         # Parse output into array and remove empty lines
         $lines  = array();
-        $result = shell_exec("composer require " . $package . " 2>&1");
+        $result = shell_exec("php {$this->composerDir}/composer.phar --working-dir={$this->workingDir} require " . $package . " 2>&1");
         if (!empty($result)) {
             $lines = explode(PHP_EOL, $result);
             $lines = array_filter($lines, function ($v) {
@@ -79,9 +89,9 @@ class CLI implements QUI\Composer\Interfaces\Composer
         chdir($this->workingDir);
         # Parse output into array and remove empty lines
         if ($direct) {
-            $result = shell_exec("composer outdated --direct 2>&1");
+            $result = shell_exec("php {$this->composerDir}/composer.phar --working-dir={$this->workingDir} outdated --direct 2>&1");
         } else {
-            $result = shell_exec("composer outdated 2>&1");
+            $result = shell_exec("php {$this->composerDir}/composer.phar --working-dir={$this->workingDir} outdated 2>&1");
         }
 
 

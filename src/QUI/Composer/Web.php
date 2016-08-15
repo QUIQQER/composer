@@ -9,10 +9,17 @@ class Web implements QUI\Composer\Interfaces\Composer
 {
     private $Application;
     private $workingDir;
+    private $composerDir;
 
 
-    public function __construct($workingDir)
+    public function __construct($workingDir,$composerDir = "")
     {
+        if(empty($composerDir)){
+            $this->composerDir = $workingDir;
+        }else{
+            $this->composerDir = $composerDir;
+        }
+
         $this->workingDir = rtrim($workingDir, "/");
         if (!is_dir($workingDir)) {
             throw new \Exception("Workingdirectory does not exist", 404);
@@ -26,7 +33,7 @@ class Web implements QUI\Composer\Interfaces\Composer
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
 
-        putenv("COMPOSER_HOME=" . $this->workingDir);
+        putenv("COMPOSER_HOME=" . $this->composerDir);
     }
 
 
