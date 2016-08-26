@@ -26,18 +26,19 @@ class ArrayOutput extends Output
     protected $curLine = "";
 
 
+    private $Events;
+
     /**
      * ArrayOutput constructor.
      * @param int $verbosity
      * @param bool $decorated
      * @param OutputFormatterInterface|null $formatter
      */
-    public function __construct(
-        $verbosity = self::VERBOSITY_NORMAL,
-        $decorated = false,
-        OutputFormatterInterface $formatter = null
-    ) {
+    public function __construct($verbosity = self::VERBOSITY_NORMAL, $decorated = false, $formatter = null)
+    {
         parent::__construct($verbosity, $decorated, $formatter);
+
+        $this->Events = new \QUI\Events\Manager();
     }
 
     /**
@@ -56,6 +57,8 @@ class ArrayOutput extends Output
         if (!$newline) {
             return;
         }
+
+        $this->Events->fireEvent('output', array($message, $newline));
 
         $this->lines[] = $this->curLine;
         $this->curLine = '';

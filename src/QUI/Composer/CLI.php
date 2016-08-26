@@ -31,8 +31,10 @@ class CLI implements QUI\Composer\Interfaces\Composer
     {
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
-        $result = shell_exec("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} install 2>&1");
-        $lines  = array();
+        echo("Executing : " . "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} install 2>&1");
+        $result = array();
+        system("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} install 2>&1");
+        $lines = array();
         # Parse output into array and remove empty lines
         if (!empty($result)) {
             $lines = explode(PHP_EOL, $result);
@@ -47,9 +49,10 @@ class CLI implements QUI\Composer\Interfaces\Composer
     public function update($options = array())
     {
         chdir($this->workingDir);
-        echo PHP_EOL . "Executing : " . "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} update 2>&1" . PHP_EOL;
         putenv("COMPOSER_HOME=" . $this->composerDir);
-        $result = shell_exec("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} update 2>&1");
+        echo("Executing : " . "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} update 2>&1");
+        $result = array();
+        system("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} update 2>&1");
         # Parse output into array and remove empty lines
         $lines = array();
         if (!empty($result)) {
@@ -72,8 +75,9 @@ class CLI implements QUI\Composer\Interfaces\Composer
         # Parse output into array and remove empty lines
         $lines = array();
         putenv("COMPOSER_HOME=" . $this->composerDir);
-        echo PHP_EOL . "Executing : " . "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} require " . $package . " 2>&1" . PHP_EOL;
-        $result = shell_exec("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} require " . $package . " 2>&1");
+        echo("Executing : " . "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} require " . $package . " 2>&1");
+        $result = array();
+        system("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} require " . $package . " 2>&1");
         if (!empty($result)) {
             $lines = explode(PHP_EOL, $result);
             $lines = array_filter($lines, function ($v) {
