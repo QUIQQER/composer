@@ -12,9 +12,9 @@ class CLI implements QUI\Composer\Interfaces\Composer
 
     public function __construct($workingDir, $composerDir = "")
     {
-
-        $this->workingDir  = QUI\Setup\Utils\Utils::normalizePath($workingDir);
-        $this->composerDir = (empty($composerDir) ? $this->workingDir : QUI\Setup\Utils\Utils::normalizePath($composerDir));
+        # make sure workingdir ends on slash
+        $this->workingDir  = rtrim($workingDir, '/') . '/';
+        $this->composerDir = (empty($composerDir)) ? $this->workingDir : rtrim($composerDir, '/') . '/';
 
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
@@ -27,83 +27,150 @@ class CLI implements QUI\Composer\Interfaces\Composer
 //        }
     }
 
+    /**
+     * Executes a composer install
+     * @param array $options - Additional options
+     * @return array|bool - Returns the output on success or false on failure
+     */
     public function install($options = array())
     {
+
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
-        echo("Executing : " . "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} install 2>&1");
-        $result = array();
-        system("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} install 2>&1");
+
+
+        $cmdResult = QUI\Utils\System::shellExec(
+            "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} install ",
+            true
+        );
+
+        $statusCode = $cmdResult['status'];
+        $output     = $cmdResult['output'];
+
         $lines = array();
         # Parse output into array and remove empty lines
-        if (!empty($result)) {
-            $lines = explode(PHP_EOL, $result);
+        if (!empty($output)) {
+            $lines = explode(PHP_EOL, $output);
             $lines = array_filter($lines, function ($v) {
                 return !empty($v);
             });
         }
 
+        if ($statusCode != 0) {
+            return false;
+        }
+
         return $lines;
     }
 
+    /**
+     * Executes an composer update command
+     * @param array $options - Additional options
+     * @return array|bool -  Returns the output on success or false on failure
+     */
     public function update($options = array())
     {
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
-        echo("Executing : " . "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} update 2>&1");
-        $result = array();
-        system("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} update 2>&1");
+
+        $cmdResult = QUI\Utils\System::shellExec(
+            "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} update ",
+            true
+        );
+
+        $statusCode = $cmdResult['status'];
+        $output     = $cmdResult['output'];
+
         # Parse output into array and remove empty lines
         $lines = array();
-        if (!empty($result)) {
-            $lines = explode(PHP_EOL, $result);
+        if (!empty($output)) {
+            $lines = explode(PHP_EOL, $output);
             $lines = array_filter($lines, function ($v) {
                 return !empty($v);
             });
         }
 
+        if ($statusCode != 0) {
+            return false;
+        }
+
         return $lines;
     }
 
+    /**
+     * Executes the composer require command
+     * @param $package - The package
+     * @param string $version - The version of the package
+     * @return array|bool -  Returns the output on success or false on failure
+     */
     public function requirePackage($package, $version = "")
     {
-        chdir($this->workingDir);
+        # Build an require string
+
         $package = "'" . $package . "'";
         if (!empty($version)) {
             $package .= ":'" . $version . "'";
         }
+
         # Parse output into array and remove empty lines
         $lines = array();
+        chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
-        echo("Executing : " . "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} require " . $package . " 2>&1");
-        $result = array();
-        system("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} require " . $package . " 2>&1");
-        if (!empty($result)) {
-            $lines = explode(PHP_EOL, $result);
+
+        $cmdResult = QUI\Utils\System::shellExec(
+            "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} require " . $package . " ",
+            true
+        );
+
+        $statusCode = $cmdResult['status'];
+        $output     = $cmdResult['output'];
+
+        if (!empty($output)) {
+            $lines = explode(PHP_EOL, $output);
             $lines = array_filter($lines, function ($v) {
                 return !empty($v);
             });
         }
 
+        if ($statusCode != 0) {
+            return false;
+        }
+
         return $lines;
     }
 
-
+    /**
+     * Executes the compsoer outdated command.
+     * @param bool $direct - Check only direct dependencies
+     * @return array|bool - Returns false on failure and an array of packagenames on success
+     */
     public function outdated($direct)
     {
         chdir($this->workingDir);
         # Parse output into array and remove empty lines
         if ($direct) {
             putenv("COMPOSER_HOME=" . $this->composerDir);
-            $result = shell_exec("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --direct 2>&1");
+            $cmdResult = QUI\Utils\System::shellExec(
+                "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --direct  ",
+                true
+            );
         } else {
             putenv("COMPOSER_HOME=" . $this->composerDir);
-            $result = shell_exec("php {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated 2>&1");
+            $cmdResult = QUI\Utils\System::shellExec(
+                "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated ",
+                true
+            );
         }
 
+        $statusCode = $cmdResult['status'];
+        $output     = $cmdResult['output'];
+
+        if ($statusCode != 0) {
+            return false;
+        }
 
         # Replace all backspaces by newline feeds (Composer uses backspace (Ascii 8) to seperate lines)
-        $result = preg_replace("#[\b]+#", "\n", $result);
+        $result = preg_replace("#[\\b]+#", "\n", $output);
 
         $lines = explode(PHP_EOL, $result);
         $regex = "~ +~";
@@ -122,6 +189,11 @@ class CLI implements QUI\Composer\Interfaces\Composer
         return $packages;
     }
 
+    /**
+     * Checks if updates are available
+     * @param bool $direct - Only direct dependencies
+     * @return bool
+     */
     public function updatesAvailable($direct)
     {
         $outdated = $this->outdated($direct);

@@ -12,20 +12,23 @@ class Web implements QUI\Composer\Interfaces\Composer
     private $composerDir;
 
 
-    public function __construct($workingDir,$composerDir = "")
+    public function __construct($workingDir, $composerDir = "")
     {
-        if(empty($composerDir)){
-            $this->composerDir = $workingDir;
-        }else{
-            $this->composerDir = $composerDir;
+        if (empty($composerDir)) {
+            $this->composerDir = rtrim($workingDir, '/') . '/';
+            ;
+        } else {
+            $this->composerDir = rtrim($composerDir, '/') . '/';
         }
 
-        $this->workingDir = rtrim($workingDir, "/");
+        $this->workingDir = rtrim($workingDir, "/") . '/';
         if (!is_dir($workingDir)) {
             throw new \Exception("Workingdirectory does not exist", 404);
         }
 
-        if (!file_exists($composerDir . "composer.json")) {
+        echo " COMPOSER DIR: " . $this->composerDir . PHP_EOL;
+
+        if (!file_exists($this->composerDir . "composer.json")) {
             throw new \Exception("Composer.json not found", 404);
         }
 
@@ -37,6 +40,11 @@ class Web implements QUI\Composer\Interfaces\Composer
     }
 
 
+    /**
+     * Performs a composer install
+     * @param array $options - additional options
+     * @return \string[]
+     */
     public function install($options = array())
     {
         chdir($this->workingDir);
@@ -54,10 +62,16 @@ class Web implements QUI\Composer\Interfaces\Composer
         $this->Application->run($Input, $Output);
 
         $this->Application->resetComposer();
+
         return $Output->getLines();
     }
 
 
+    /**
+     * Performs a composer update
+     * @param array $options - Additional options
+     * @return \string[]
+     */
     public function update($options = array())
     {
         chdir($this->workingDir);
@@ -77,10 +91,16 @@ class Web implements QUI\Composer\Interfaces\Composer
 
 
         $this->Application->resetComposer();
+
         return $Output->getLines();
     }
 
-
+    /**
+     * Performs a composer require
+     * @param $package - The package name
+     * @param string $version - The package version
+     * @return \string[]
+     */
     public function requirePackage($package, $version = "")
     {
         chdir($this->workingDir);
@@ -101,9 +121,15 @@ class Web implements QUI\Composer\Interfaces\Composer
 
 
         $this->Application->resetComposer();
+
         return $Output->getLines();
     }
 
+    /**
+     * Performs a composer outdated
+     * @param bool $direct - Only direct depenencies
+     * @return array - Array of package names
+     */
     public function outdated($direct)
     {
         chdir($this->workingDir);
@@ -142,9 +168,15 @@ class Web implements QUI\Composer\Interfaces\Composer
 
 
         $this->Application->resetComposer();
+
         return $packages;
     }
 
+    /**
+     * Checks if packages can be updated
+     * @param bool $direct - Only direct dependencies
+     * @return bool - true if updates are available, false if no updates are available
+     */
     public function updatesAvailable($direct)
     {
         if (count($this->outdated($direct)) > 0) {

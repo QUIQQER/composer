@@ -37,8 +37,6 @@ class ArrayOutput extends Output
     public function __construct($verbosity = self::VERBOSITY_NORMAL, $decorated = false, $formatter = null)
     {
         parent::__construct($verbosity, $decorated, $formatter);
-
-        $this->Events = new \QUI\Events\Manager();
     }
 
     /**
@@ -58,7 +56,6 @@ class ArrayOutput extends Output
             return;
         }
 
-        $this->Events->fireEvent('output', array($message, $newline));
 
         $this->lines[] = $this->curLine;
         $this->curLine = '';

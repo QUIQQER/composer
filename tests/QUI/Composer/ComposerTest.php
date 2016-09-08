@@ -9,7 +9,7 @@ class ComposerTest extends TestCase
 
     private $workingDir;
     private $composerDir;
-    private $mode = ComposerTest::MODE_CLI;
+    private $mode = ComposerTest::MODE_WEB;
 
     private $testPackages = array(
         'testRequire'  => array(
@@ -67,7 +67,7 @@ class ComposerTest extends TestCase
     {
         parent::tearDown();
 
-        $this->foreceRemoveDir($this->workingDir);
+        #$this->foreceRemoveDir($this->workingDir);
     }
     # =============================================
     # Tests
@@ -178,7 +178,7 @@ class ComposerTest extends TestCase
                 $this->writePHPUnitLog("Using Composer in " . ($Composer->getMode() == \QUI\Composer\Composer::MODE_CLI ? "CLI" : "Web") . " mode.");
                 break;
             case self::MODE_WEB:
-                $Composer = new \QUI\Composer\Web($this->workingDir, $this->composerDir);
+                $Composer = new \QUI\Composer\Web($this->workingDir);
                 $this->writePHPUnitLog("Using Composer in forced-Web mode.");
                 break;
             case self::MODE_CLI:
