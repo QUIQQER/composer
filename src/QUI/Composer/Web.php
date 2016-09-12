@@ -111,7 +111,8 @@ class Web implements QUI\Composer\Interfaces\Composer
         $params = array(
             "command"       => "require",
             "packages"      => array($package),
-            "--working-dir" => $this->workingDir
+            "--working-dir" => $this->workingDir,
+            "--prefer-dist" => true
         );
 
         $Input  = new ArrayInput($params);

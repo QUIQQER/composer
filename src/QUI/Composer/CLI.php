@@ -10,6 +10,8 @@ class CLI implements QUI\Composer\Interfaces\Composer
     protected $workingDir;
     protected $composerDir;
 
+    private $phpPath;
+
     public function __construct($workingDir, $composerDir = "")
     {
         # make sure workingdir ends on slash
@@ -25,12 +27,19 @@ class CLI implements QUI\Composer\Interfaces\Composer
 //        if (!file_exists($composerDir . "composer.json")) {
 //            throw new \Exception("Composer.json not found", 404);
 //        }
+
+        $this->phpPath = "";
+        if (defined(PHP_BINARY)) {
+            $this->phpPath = PHP_BINARY . " ";
+        } else {
+            $this->phpPath = "php ";
+        }
     }
 
     /**
      * Executes a composer install
      * @param array $options - Additional options
-     * @return array|bool - Returns the output on success or false on failure
+     * @return bool - True on success, false on failure
      */
     public function install($options = array())
     {
@@ -38,63 +47,21 @@ class CLI implements QUI\Composer\Interfaces\Composer
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
-
-        $cmdResult = QUI\Utils\System::shellExec(
-            "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} install ",
-            true
-        );
-
-        $statusCode = $cmdResult['status'];
-        $output     = $cmdResult['output'];
-
-        $lines = array();
-        # Parse output into array and remove empty lines
-        if (!empty($output)) {
-            $lines = explode(PHP_EOL, $output);
-            $lines = array_filter($lines, function ($v) {
-                return !empty($v);
-            });
-        }
-
-        if ($statusCode != 0) {
-            return false;
-        }
-
-        return $lines;
+        return $this->shellExec($this->phpPath ." {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} install 2>&1");
     }
 
     /**
      * Executes an composer update command
      * @param array $options - Additional options
-     * @return array|bool -  Returns the output on success or false on failure
+     * @return bool
      */
     public function update($options = array())
     {
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
-        $cmdResult = QUI\Utils\System::shellExec(
-            "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} update ",
-            true
-        );
 
-        $statusCode = $cmdResult['status'];
-        $output     = $cmdResult['output'];
-
-        # Parse output into array and remove empty lines
-        $lines = array();
-        if (!empty($output)) {
-            $lines = explode(PHP_EOL, $output);
-            $lines = array_filter($lines, function ($v) {
-                return !empty($v);
-            });
-        }
-
-        if ($statusCode != 0) {
-            return false;
-        }
-
-        return $lines;
+        return $this->shellExec($this->phpPath ." {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} update 2>&1");
     }
 
     /**
@@ -112,31 +79,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
             $package .= ":'" . $version . "'";
         }
 
-        # Parse output into array and remove empty lines
-        $lines = array();
-        chdir($this->workingDir);
-        putenv("COMPOSER_HOME=" . $this->composerDir);
-
-        $cmdResult = QUI\Utils\System::shellExec(
-            "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} require " . $package . " ",
-            true
-        );
-
-        $statusCode = $cmdResult['status'];
-        $output     = $cmdResult['output'];
-
-        if (!empty($output)) {
-            $lines = explode(PHP_EOL, $output);
-            $lines = array_filter($lines, function ($v) {
-                return !empty($v);
-            });
-        }
-
-        if ($statusCode != 0) {
-            return false;
-        }
-
-        return $lines;
+        return $this->shellExec($this->phpPath ." {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} require " . $package . " 2>&1");
     }
 
     /**
@@ -150,33 +93,24 @@ class CLI implements QUI\Composer\Interfaces\Composer
         # Parse output into array and remove empty lines
         if ($direct) {
             putenv("COMPOSER_HOME=" . $this->composerDir);
-            $cmdResult = QUI\Utils\System::shellExec(
-                "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --direct  ",
-                true
+            exec(
+                $this->phpPath ." {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --no-plugins --direct",
+                $output,
+                $statusCode
             );
         } else {
             putenv("COMPOSER_HOME=" . $this->composerDir);
-            $cmdResult = QUI\Utils\System::shellExec(
-                "php {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated ",
-                true
+            exec(
+                $this->phpPath ." {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --no-plugins",
+                $output,
+                $statusCode
             );
         }
 
-        $statusCode = $cmdResult['status'];
-        $output     = $cmdResult['output'];
-
-        if ($statusCode != 0) {
-            return false;
-        }
-
-        # Replace all backspaces by newline feeds (Composer uses backspace (Ascii 8) to seperate lines)
-        $result = preg_replace("#[\\b]+#", "\n", $output);
-
-        $lines = explode(PHP_EOL, $result);
         $regex = "~ +~";
 
         $packages = array();
-        foreach ($lines as $line) {
+        foreach ($output as $line) {
             #Replace all spaces (multiple or single) by a single space
             $line  = preg_replace($regex, " ", $line);
             $words = explode(" ", $line);
@@ -199,8 +133,29 @@ class CLI implements QUI\Composer\Interfaces\Composer
         $outdated = $this->outdated($direct);
         if (count($outdated) > 0) {
             return true;
-        } else {
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $cmd - The command that should be executed
+     * @return bool - True on success, false on failure
+     */
+    private function shellExec($cmd)
+    {
+        QUI\Setup\Log\Log::info("Executing: " . $cmd);
+
+        $statusCode = 0;
+
+        $lastLine = system($cmd, $statusCode);
+
+        if ($statusCode != 0) {
+            QUI\Setup\Log\Log::error("Execution failed. Errorcode : " . $statusCode . " Last output line : " . $lastLine);
+
             return false;
         }
+
+        return true;
     }
 }
