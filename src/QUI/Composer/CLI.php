@@ -29,7 +29,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
 //        }
 
         $this->phpPath = "";
-        if (defined(PHP_BINARY)) {
+        if (defined('PHP_BINARY')) {
             $this->phpPath = PHP_BINARY . " ";
         } else {
             $this->phpPath = "php ";
