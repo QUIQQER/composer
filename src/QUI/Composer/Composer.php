@@ -27,16 +27,16 @@ class Composer implements QUI\Composer\Interfaces\Composer
      * Will use CLI composer if shell_exec is available
      * @param string $workingDir
      */
-    public function __construct($workingDir,$composerDir="")
+    public function __construct($workingDir, $composerDir = "")
     {
         if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
-            $this->Runner = new CLI($workingDir,$composerDir);
-            $this->mode = self::MODE_CLI;
+            $this->Runner = new CLI($workingDir, $composerDir);
+            $this->mode   = self::MODE_CLI;
             return;
         }
 
-        $this->Runner = new Web($workingDir,$composerDir);
-        $this->mode = self::MODE_WEB;
+        $this->Runner = new Web($workingDir, $composerDir);
+        $this->mode   = self::MODE_WEB;
     }
 
 

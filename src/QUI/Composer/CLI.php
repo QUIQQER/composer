@@ -47,7 +47,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
-        return $this->shellExec($this->phpPath ." {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} install 2>&1");
+        return $this->shellExec($this->phpPath . " {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} install 2>&1");
     }
 
     /**
@@ -61,7 +61,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
 
-        return $this->shellExec($this->phpPath ." {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} update 2>&1");
+        return $this->shellExec($this->phpPath . " {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} update 2>&1");
     }
 
     /**
@@ -79,7 +79,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
             $package .= ":'" . $version . "'";
         }
 
-        return $this->shellExec($this->phpPath ." {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} require " . $package . " 2>&1");
+        return $this->shellExec($this->phpPath . " {$this->composerDir}composer.phar --prefer-dist --working-dir={$this->workingDir} require " . $package . " 2>&1");
     }
 
     /**
@@ -94,14 +94,14 @@ class CLI implements QUI\Composer\Interfaces\Composer
         if ($direct) {
             putenv("COMPOSER_HOME=" . $this->composerDir);
             exec(
-                $this->phpPath ." {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --no-plugins --direct",
+                $this->phpPath . " {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --no-plugins --direct",
                 $output,
                 $statusCode
             );
         } else {
             putenv("COMPOSER_HOME=" . $this->composerDir);
             exec(
-                $this->phpPath ." {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --no-plugins",
+                $this->phpPath . " {$this->composerDir}composer.phar --working-dir={$this->workingDir} outdated --no-plugins",
                 $output,
                 $statusCode
             );
