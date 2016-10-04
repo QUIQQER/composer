@@ -9,15 +9,29 @@ use QUI;
 
 /**
  * Class Composer
+ *
  * @package QUI\Composer
  */
 class Composer implements QUI\Composer\Interfaces\Composer
 {
+    /**
+     * @var int
+     */
     const MODE_CLI = 0;
+
+    /**
+     * @var int
+     */
     const MODE_WEB = 1;
 
-    /** @var QUI\Composer\Interfaces\Composer */
+    /**
+     * @var QUI\Composer\Interfaces\Composer
+     */
     private $Runner;
+
+    /**
+     * @var int
+     */
     private $mode;
 
     /**
@@ -25,6 +39,7 @@ class Composer implements QUI\Composer\Interfaces\Composer
      * Composer constructor.
      * Can be used as general accespoint to composer.
      * Will use CLI composer if shell_exec is available
+     *
      * @param string $workingDir
      */
     public function __construct($workingDir, $composerDir = "")
@@ -39,18 +54,15 @@ class Composer implements QUI\Composer\Interfaces\Composer
         $this->mode   = self::MODE_WEB;
     }
 
-
     public function update($options = array())
     {
         return $this->Runner->update($options);
     }
 
-
     public function install($options = array())
     {
         return $this->Runner->install($options);
     }
-
 
     public function requirePackage($package, $version = "")
     {
