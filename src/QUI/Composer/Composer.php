@@ -54,33 +54,106 @@ class Composer implements QUI\Composer\Interfaces\Composer
         $this->mode   = self::MODE_WEB;
     }
 
+    /**
+     * Executes composers update command
+     * @param array $options
+     * @return \string[]
+     */
     public function update($options = array())
     {
         return $this->Runner->update($options);
     }
 
+    /**
+     * Executes composers install command
+     * @param array $options
+     * @return \string[]
+     */
     public function install($options = array())
     {
         return $this->Runner->install($options);
     }
 
-    public function requirePackage($package, $version = "")
+    /**
+     * Executes composers require command
+     * @param string $package - Name of the package : i.E. 'quiqqer/quiqqer'
+     * @param string $version
+     * @param array $options
+     * @return \string[]
+     */
+    public function requirePackage($package, $version = "", $options = array())
     {
         return $this->Runner->requirePackage($package, $version);
     }
 
-    public function outdated($direct)
+    /**
+     * Executes composers outdated command
+     * @param bool $direct
+     * @param array $options
+     * @return array|\string[]
+     */
+    public function outdated($direct = false, $options = array())
     {
-        return $this->Runner->outdated($direct);
+        return $this->Runner->outdated($direct, $options);
     }
 
+    /**
+     * Checks wether updates are available
+     * @param bool $direct
+     * @return bool - true if updates are available
+     */
     public function updatesAvailable($direct)
     {
         return $this->Runner->updatesAvailable($direct);
     }
 
+    /**
+     * Returns the current mode (Web or CLI) as int
+     * @return int
+     */
     public function getMode()
     {
         return $this->mode;
+    }
+
+    /**
+     * Generates the autoloader files again without downloading anything
+     * @param array $options
+     * @return bool - true on success
+     */
+    public function dumpAutoload($options = array())
+    {
+        // TODO: Implement dumpAutoload() method.
+    }
+
+    /**
+     * Searches the repositories for the given needle
+     * @param $needle
+     * @param array $options
+     * @return array - Returns an array in the format : array( packagename => description)
+     */
+    public function search($needle, $options = array())
+    {
+        // TODO: Implement search() method.
+    }
+
+    /**
+     * Lists all installed packages
+     * @param string $package
+     * @param array $options
+     * @return array - returns an array with all installed packages
+     */
+    public function show($package = "", $options = array())
+    {
+        // TODO: Implement show() method.
+    }
+
+    /**
+     * Clears the composer cache
+     * @return bool - true on success; false on failure
+     */
+    public function clearCache()
+    {
+        // TODO: Implement clearCache() method.
     }
 }

@@ -26,7 +26,6 @@ class ArrayOutput extends Output
     protected $curLine = "";
 
 
-    private $Events;
 
     /**
      * ArrayOutput constructor.

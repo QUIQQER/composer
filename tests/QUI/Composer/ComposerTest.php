@@ -67,7 +67,7 @@ class ComposerTest extends TestCase
     {
         parent::tearDown();
 
-        #$this->foreceRemoveDir($this->workingDir);
+        $this->foreceRemoveDir($this->workingDir);
     }
     # =============================================
     # Tests
@@ -108,6 +108,41 @@ class ComposerTest extends TestCase
 
         $this->assertContains($this->testPackages['testOutdated']['name'], $outdated);
     }
+
+    public function testSearch()
+    {
+        $Composer = $this->getComposer();
+
+        $result = $Composer->search("monolog");
+
+        print_r($result);
+    }
+
+    public function testDumpAutoload()
+    {
+        $Composer = $this->getComposer();
+
+        $result = $Composer->dumpAutoload();
+    }
+
+    public function testClearCache()
+    {
+        $Composer = $this->getComposer();
+
+        $result = $Composer->clearCache();
+    }
+
+    public function testShow()
+    {
+        $Composer = $this->getComposer();
+
+        $Composer->requirePackage("monolog/monolog");
+
+        $result = $Composer->show();
+
+        print_r($result);
+    }
+
 
     public function testUpdate()
     {

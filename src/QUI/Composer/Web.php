@@ -5,13 +5,22 @@ use QUI;
 use Composer\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 
+/**
+ * Class Web
+ * @package QUI\Composer
+ */
 class Web implements QUI\Composer\Interfaces\Composer
 {
     private $Application;
     private $workingDir;
     private $composerDir;
 
-
+    /**
+     * (Composer) Web constructor.
+     * @param string $workingDir
+     * @param string $composerDir
+     * @throws \Exception
+     */
     public function __construct($workingDir, $composerDir = "")
     {
         if (empty($composerDir)) {
@@ -99,9 +108,10 @@ class Web implements QUI\Composer\Interfaces\Composer
      * Performs a composer require
      * @param $package - The package name
      * @param string $version - The package version
+     * @param array $options
      * @return \string[]
      */
-    public function requirePackage($package, $version = "")
+    public function requirePackage($package, $version = "", $options = array())
     {
         chdir($this->workingDir);
         if (!empty($version)) {
@@ -114,6 +124,8 @@ class Web implements QUI\Composer\Interfaces\Composer
             "--working-dir" => $this->workingDir,
             "--prefer-dist" => true
         );
+
+        $params = array_merge($params, $options);
 
         $Input  = new ArrayInput($params);
         $Output = new ArrayOutput();
@@ -131,7 +143,7 @@ class Web implements QUI\Composer\Interfaces\Composer
      * @param bool $direct - Only direct depenencies
      * @return array - Array of package names
      */
-    public function outdated($direct)
+    public function outdated($direct = false, $options = array())
     {
         chdir($this->workingDir);
         $params = array(
@@ -141,8 +153,10 @@ class Web implements QUI\Composer\Interfaces\Composer
         );
 
         if ($direct) {
-            $params['--direct'] = false;
+            $params['--direct'] = true;
         }
+
+        $params = array_merge($params, $options);
 
         $Input  = new ArrayInput($params);
         $Output = new ArrayOutput();
@@ -178,12 +192,153 @@ class Web implements QUI\Composer\Interfaces\Composer
      * @param bool $direct - Only direct dependencies
      * @return bool - true if updates are available, false if no updates are available
      */
-    public function updatesAvailable($direct)
+    public function updatesAvailable($direct = false)
     {
         if (count($this->outdated($direct)) > 0) {
             return true;
         } else {
             return false;
         }
+    }
+
+    /**
+     * Generates the autoloader files again without downloading anything
+     * @param array $options
+     * @return bool - true on success
+     */
+    public function dumpAutoload($options = array())
+    {
+        chdir($this->workingDir);
+        $params = array(
+            "command"       => "dump-autoload",
+            "--working-dir" => $this->workingDir
+        );
+
+        $params = array_merge($params, $options);
+
+        $Input  = new ArrayInput($params);
+        $Output = new ArrayOutput();
+
+        $this->Application->run($Input, $Output);
+
+        $this->Application->resetComposer();
+
+        return true;
+    }
+
+    /**
+     * Searches the repositories for the given needle
+     * @param $needle
+     * @param array $options
+     * @return array - Returns an array in the format : array( packagename => description)
+     */
+    public function search($needle, $options = array())
+    {
+        $packages = array();
+
+        chdir($this->workingDir);
+        $params = array(
+            "command"       => "search",
+            "tokens"        => array($needle),
+            "--working-dir" => $this->workingDir
+        );
+
+        $params = array_merge($params, $options);
+
+        $Input  = new ArrayInput($params);
+        $Output = new ArrayOutput();
+
+        $this->Application->run($Input, $Output);
+
+        $this->Application->resetComposer();
+
+        $lines = $Output->getLines();
+
+        foreach ($lines as $line) {
+            $split = explode(" ", $line, 2);
+
+            if (isset($split[0]) && isset($split[1])) {
+                $packages[$split[0]] = $split[1];
+            }
+        }
+
+        return $packages;
+    }
+
+    /**
+     * Lists all installed packages
+     * @param string $package
+     * @param array $options
+     * @return array - returns an array with all installed packages
+     */
+    public function show($package = "", $options = array())
+    {
+        $packages = array();
+
+        chdir($this->workingDir);
+        $params = array(
+            "command" => "show",
+            "--working-dir" => $this->workingDir
+        );
+
+        if (!empty($package)) {
+            $params['package'] = $package;
+        }
+
+        $params = array_merge($params, $options);
+
+        $Input  = new ArrayInput($params);
+        $Output = new ArrayOutput();
+
+
+        $this->Application->run($Input, $Output);
+        $this->Application->resetComposer();
+
+        $lines = $Output->getLines();
+
+        foreach ($lines as $line) {
+            echo $line . PHP_EOL;
+        }
+
+        $regex = "~ +~";
+        foreach ($lines as $line) {
+            // Replace all spaces (multiple or single) by a single space
+            $line  = preg_replace($regex, " ", $line);
+            $words = explode(" ", $line);
+
+            if ($words[0] != ""
+                && !empty($words[0])
+                && substr($words[0], 0, 1) != chr(8)
+                && $words[0] != "Reading"
+            ) {
+                $packages[] = $words[0];
+            }
+        }
+
+        return $packages;
+    }
+
+    /**
+     * Clears the composer cache
+     * @return bool - true on success; false on failure
+     */
+    public function clearCache()
+    {
+        chdir($this->workingDir);
+        $params = array(
+            "command"       => "clear-cache",
+            "--working-dir" => $this->workingDir
+        );
+
+        $params = array_merge($params);
+
+        $Input  = new ArrayInput($params);
+        $Output = new ArrayOutput();
+
+        $this->Application->run($Input, $Output);
+
+        $this->Application->resetComposer();
+
+        return true;
     }
 }
