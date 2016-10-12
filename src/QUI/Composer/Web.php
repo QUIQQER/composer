@@ -96,9 +96,7 @@ class Web implements QUI\Composer\Interfaces\Composer
         $Output = new ArrayOutput();
 
         $this->Application->run($Input, $Output);
-
-        print_r($Output->getLines());
-
+        
         return $Output->getLines();
     }
 
