@@ -36,7 +36,6 @@ class Web implements QUI\Composer\Interfaces\Composer
         }
 
 
-
         if (!file_exists($this->composerDir . "composer.json")) {
             throw new \Exception("Composer.json not found", 404);
         }
@@ -56,6 +55,7 @@ class Web implements QUI\Composer\Interfaces\Composer
      */
     public function install($options = array())
     {
+        $this->resetComposer();
         chdir($this->workingDir);
         $params = array(
             "command"       => "install",
@@ -70,7 +70,6 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $this->Application->run($Input, $Output);
 
-        $this->Application->resetComposer();
 
         return $Output->getLines();
     }
@@ -83,6 +82,7 @@ class Web implements QUI\Composer\Interfaces\Composer
      */
     public function update($options = array())
     {
+        $this->resetComposer();
         chdir($this->workingDir);
         $params = array(
             "command"       => "update",
@@ -92,14 +92,12 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $params = array_merge($params, $options);
 
-
         $Input  = new ArrayInput($params);
         $Output = new ArrayOutput();
 
         $this->Application->run($Input, $Output);
 
-
-        $this->Application->resetComposer();
+        print_r($Output->getLines());
 
         return $Output->getLines();
     }
@@ -113,6 +111,7 @@ class Web implements QUI\Composer\Interfaces\Composer
      */
     public function requirePackage($package, $version = "", $options = array())
     {
+        $this->resetComposer();
         chdir($this->workingDir);
         if (!empty($version)) {
             $package .= ":" . $version;
@@ -132,20 +131,18 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $this->Application->run($Input, $Output);
 
-
-        $this->Application->resetComposer();
-
         return $Output->getLines();
     }
 
     /**
      * Performs a composer outdated
-     * @param bool $direct - Only direct depenencies
+     * @param bool $direct - Only direct dependencies
      * @param array $options
      * @return array - Array of package names
      */
     public function outdated($direct = false, $options = array())
     {
+        $this->resetComposer();
         chdir($this->workingDir);
         $params = array(
             "command"       => "show",
@@ -159,6 +156,7 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $params = array_merge($params, $options);
 
+
         $Input  = new ArrayInput($params);
         $Output = new ArrayOutput();
 
@@ -169,6 +167,7 @@ class Web implements QUI\Composer\Interfaces\Composer
         $regex    = "~\\s+~";
         $packages = array();
 
+        $ignoreList = array("<warning>You", "Reading");
         foreach ($result as $line) {
             if (empty($line)) {
                 continue;
@@ -177,13 +176,14 @@ class Web implements QUI\Composer\Interfaces\Composer
             $line = preg_replace($regex, " ", trim($line));
 
             $words = explode(" ", $line);
-            if ($words[0] != "" && !empty($words[0]) && substr($words[0], 0, 1) != chr(8) && $words[0] != "Reading") {
+            if ($words[0] != "" &&
+                !empty($words[0]) &&
+                substr($words[0], 0, 1) != chr(8) &&
+                !in_array($words[0], $ignoreList)
+            ) {
                 $packages[] = $words[0];
             }
         }
-
-
-        $this->Application->resetComposer();
 
         return $packages;
     }
@@ -195,11 +195,12 @@ class Web implements QUI\Composer\Interfaces\Composer
      */
     public function updatesAvailable($direct = false)
     {
+        $this->resetComposer();
         if (count($this->outdated($direct)) > 0) {
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -209,6 +210,7 @@ class Web implements QUI\Composer\Interfaces\Composer
      */
     public function dumpAutoload($options = array())
     {
+        $this->resetComposer();
         chdir($this->workingDir);
         $params = array(
             "command"       => "dump-autoload",
@@ -222,7 +224,6 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $this->Application->run($Input, $Output);
 
-        $this->Application->resetComposer();
 
         return true;
     }
@@ -235,6 +236,7 @@ class Web implements QUI\Composer\Interfaces\Composer
      */
     public function search($needle, $options = array())
     {
+        $this->resetComposer();
         $packages = array();
 
         chdir($this->workingDir);
@@ -250,8 +252,6 @@ class Web implements QUI\Composer\Interfaces\Composer
         $Output = new ArrayOutput();
 
         $this->Application->run($Input, $Output);
-
-        $this->Application->resetComposer();
 
         $lines = $Output->getLines();
 
@@ -274,11 +274,12 @@ class Web implements QUI\Composer\Interfaces\Composer
      */
     public function show($package = "", $options = array())
     {
+        $this->resetComposer();
         $packages = array();
 
         chdir($this->workingDir);
         $params = array(
-            "command" => "show",
+            "command"       => "show",
             "--working-dir" => $this->workingDir
         );
 
@@ -293,7 +294,6 @@ class Web implements QUI\Composer\Interfaces\Composer
 
 
         $this->Application->run($Input, $Output);
-        $this->Application->resetComposer();
 
         $lines = $Output->getLines();
 
@@ -321,6 +321,7 @@ class Web implements QUI\Composer\Interfaces\Composer
      */
     public function clearCache()
     {
+        $this->resetComposer();
         chdir($this->workingDir);
         $params = array(
             "command"       => "clear-cache",
@@ -334,8 +335,15 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $this->Application->run($Input, $Output);
 
-        $this->Application->resetComposer();
-
         return true;
+    }
+
+    /**
+     * Resets composer to avoid caching issues.
+     */
+    private function resetComposer()
+    {
+        $this->Application = new Application();
+        $this->Application->setAutoExit(false);
     }
 }

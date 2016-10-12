@@ -24,6 +24,11 @@ class ComposerTest extends TestCase
             'name'     => "sebastian/version",
             'version'  => "1.0.0",
             'version2' => "1.0.6"
+        ),
+        'default'      => array(
+            'name'     => "sebastian/version",
+            'version'  => "1.0.0",
+            'version2' => "1.0.6"
         )
     );
 
@@ -73,6 +78,9 @@ class ComposerTest extends TestCase
     # Tests
     # =============================================
 
+    /**
+     * @group Completed
+     */
     public function testRequire()
     {
         $Composer = $this->getComposer();
@@ -96,6 +104,9 @@ class ComposerTest extends TestCase
         );
     }
 
+    /**
+     * @group Completed
+     */
     public function testOutdated()
     {
         $Composer = $this->getComposer();
@@ -109,41 +120,82 @@ class ComposerTest extends TestCase
         $this->assertContains($this->testPackages['testOutdated']['name'], $outdated);
     }
 
+    /**
+     * @group Completed
+     */
     public function testSearch()
     {
         $Composer = $this->getComposer();
 
         $result = $Composer->search("monolog");
 
-        print_r($result);
+        $keyFound = key_exists("monolog/monolog", $result);
+
+        $this->assertTrue($keyFound);
     }
 
+    /**
+     * @group Completed
+     */
     public function testDumpAutoload()
     {
         $Composer = $this->getComposer();
 
-        $result = $Composer->dumpAutoload();
+        $Composer->requirePackage(
+            $this->testPackages['default']['name'],
+            $this->testPackages['default']['version']
+        );
+        // Check if autoload file was generated.
+        $this->assertFileExists(
+            $this->workingDir . "/vendor/autoload.php",
+            "Can not continue with the test, because autoload did not exists after require."
+        );
+        // Check if autoload file has been modified
+        touch($this->workingDir . "/vendor/autoload.php", time() - 3600);
+        $timeBefore = filemtime($this->workingDir . "/vendor/autoload.php");
+
+        clearstatcache();
+        $Composer->dumpAutoload();
+
+        $timeAfter = filemtime($this->workingDir . "/vendor/autoload.php");
+
+        $this->assertNotEquals($timeAfter, $timeBefore);
     }
+
 
     public function testClearCache()
     {
         $Composer = $this->getComposer();
 
+        $Composer->requirePackage(
+            $this->testPackages['default']['name'],
+            $this->testPackages['default']['version']
+        );
+
         $result = $Composer->clearCache();
     }
 
+    /**
+     * @group Completed
+     */
     public function testShow()
     {
         $Composer = $this->getComposer();
 
-        $Composer->requirePackage("monolog/monolog");
+        $Composer->requirePackage(
+            $this->testPackages['default']['name'],
+            $this->testPackages['default']['version']
+        );
 
         $result = $Composer->show();
 
-        print_r($result);
+        $this->assertTrue(is_array($result));
+        $this->assertContains("sebastian/version", $result);
     }
 
-
+    /**
+     * @group Completed
+     */
     public function testUpdate()
     {
         $Composer = $this->getComposer();
@@ -161,7 +213,7 @@ class ComposerTest extends TestCase
         $json = json_encode($data, JSON_PRETTY_PRINT);
         file_put_contents($this->workingDir . "/composer.json", $json);
 
-        $result = $Composer->update();
+        $Composer->update();
 
 
         # ===================
@@ -198,6 +250,21 @@ class ComposerTest extends TestCase
             $this->testPackages['testUpdate']['version2'],
             $packages[$index]['version']
         );
+    }
+
+    public function testUpdatesAvailable()
+    {
+        $Composer = $this->getComposer();
+
+        $Composer->requirePackage(
+            $this->testPackages['default']['name'],
+            $this->testPackages['default']['version']
+        );
+
+        $this->assertTrue($Composer->updatesAvailable(true));
+        $Composer->requirePackage($this->testPackages['default']['name'], "dev-master");
+
+        $this->assertFalse($Composer->updatesAvailable(true));
     }
 
     # =============================================

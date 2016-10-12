@@ -131,7 +131,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
 
         $regex    = "~ +~";
         $packages = array();
-
+        $ignoreList = array("<warning>You","Reading");
         foreach ($output as $line) {
             // Replace all spaces (multiple or single) by a single space
             $line  = preg_replace($regex, " ", $line);
@@ -140,7 +140,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
             if ($words[0] != ""
                 && !empty($words[0])
                 && substr($words[0], 0, 1) != chr(8)
-                && $words[0] != "Reading"
+                && !in_array($words[0], $ignoreList)
             ) {
                 $packages[] = $words[0];
             }
