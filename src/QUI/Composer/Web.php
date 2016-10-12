@@ -35,7 +35,7 @@ class Web implements QUI\Composer\Interfaces\Composer
             throw new \Exception("Workingdirectory does not exist", 404);
         }
 
-        echo " COMPOSER DIR: " . $this->composerDir . PHP_EOL;
+
 
         if (!file_exists($this->composerDir . "composer.json")) {
             throw new \Exception("Composer.json not found", 404);
@@ -141,6 +141,7 @@ class Web implements QUI\Composer\Interfaces\Composer
     /**
      * Performs a composer outdated
      * @param bool $direct - Only direct depenencies
+     * @param array $options
      * @return array - Array of package names
      */
     public function outdated($direct = false, $options = array())
@@ -295,10 +296,6 @@ class Web implements QUI\Composer\Interfaces\Composer
         $this->Application->resetComposer();
 
         $lines = $Output->getLines();
-
-        foreach ($lines as $line) {
-            echo $line . PHP_EOL;
-        }
 
         $regex = "~ +~";
         foreach ($lines as $line) {
