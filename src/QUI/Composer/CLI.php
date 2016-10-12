@@ -102,7 +102,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
     }
 
     /**
-     * Executes the compsoer outdated command.
+     * Executes the composer outdated command.
      *
      * @param bool $direct - Check only direct dependencies
      *
