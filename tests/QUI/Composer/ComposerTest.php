@@ -252,6 +252,9 @@ class ComposerTest extends TestCase
         );
     }
 
+    /**
+     * @group Completed
+     */
     public function testUpdatesAvailable()
     {
         $Composer = $this->getComposer();
@@ -267,6 +270,18 @@ class ComposerTest extends TestCase
         $this->assertFalse($Composer->updatesAvailable(true));
     }
 
+
+    public function testInstall()
+    {
+
+        $Composer = $this->getComposer();
+
+        $this->assertFileNotExists($this->workingDir."/vendor/composer/composer/src/Composer/Composer.php", "This file must not exist, because the test will check if it will get created.");
+
+        $Composer->install();
+
+        $this->assertFileExists($this->workingDir."/vendor/composer/composer/src/Composer/Composer.php");
+    }
     # =============================================
     # Helper
     # =============================================
