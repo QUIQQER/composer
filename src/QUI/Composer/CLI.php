@@ -92,10 +92,10 @@ class CLI implements QUI\Composer\Interfaces\Composer
     public function requirePackage($package, $version = "", $options = array())
     {
         // Build an require string
-        $package = "'" . $package . "'";
+        $package = "'" . escapeshellarg($package) . "'";
 
         if (!empty($version)) {
-            $package .= ":'" . $version . "'";
+            $package .= ":'" . escapeshellarg($version) . "'";
         }
 
         return $this->executeComposer('--prefer-dist  require ' . $package . ' 2>&1', $options);
@@ -129,9 +129,9 @@ class CLI implements QUI\Composer\Interfaces\Composer
         exec($command, $output, $statusCode);
 
 
-        $regex    = "~ +~";
-        $packages = array();
-        $ignoreList = array("<warning>You","Reading");
+        $regex      = "~ +~";
+        $packages   = array();
+        $ignoreList = array("<warning>You", "Reading");
         foreach ($output as $line) {
             // Replace all spaces (multiple or single) by a single space
             $line  = preg_replace($regex, " ", $line);
@@ -191,7 +191,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
         // Parse output into array and remove empty lines
         $command = $this->phpPath;
         $command .= $this->composerDir . 'composer.phar';
-        $command .= ' search ' . $needle;
+        $command .= ' search "' . escapeshellarg($needle).'"';
         $command .= ' --working-dir=' . $this->workingDir;
 
         $command .= $this->getOptionString($options);
@@ -307,9 +307,9 @@ class CLI implements QUI\Composer\Interfaces\Composer
         foreach ($options as $option => $value) {
             $option = "--" . ltrim($option, "--");
             if ($value === true) {
-                $optionString .= ' ' . $option;
+                $optionString .= ' ' . escapeshellarg($option);
             } else {
-                $optionString .= ' ' . $option . "=" . trim($value);
+                $optionString .= ' ' . escapeshellarg($option) . "=" . escapeshellarg(trim($value));
             }
         }
 
