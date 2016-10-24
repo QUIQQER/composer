@@ -56,6 +56,7 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
     /**
      * Executes composers update command
+     *
      * @param array $options
      * @return \string[]
      */
@@ -66,6 +67,7 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
     /**
      * Executes composers install command
+     *
      * @param array $options
      * @return \string[]
      */
@@ -76,6 +78,7 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
     /**
      * Executes composers require command
+     *
      * @param string $package - Name of the package : i.E. 'quiqqer/quiqqer'
      * @param string $version
      * @param array $options
@@ -88,6 +91,7 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
     /**
      * Executes composers outdated command
+     *
      * @param bool $direct
      * @param array $options
      * @return array|\string[]
@@ -99,6 +103,7 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
     /**
      * Checks wether updates are available
+     *
      * @param bool $direct
      * @return bool - true if updates are available
      */
@@ -109,6 +114,7 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
     /**
      * Returns the current mode (Web or CLI) as int
+     *
      * @return int
      */
     public function getMode()
@@ -118,42 +124,46 @@ class Composer implements QUI\Composer\Interfaces\Composer
 
     /**
      * Generates the autoloader files again without downloading anything
+     *
      * @param array $options
      * @return bool - true on success
      */
     public function dumpAutoload($options = array())
     {
-        // TODO: Implement dumpAutoload() method.
+        return $this->Runner->dumpAutoload($options);
     }
 
     /**
      * Searches the repositories for the given needle
+     *
      * @param $needle
      * @param array $options
      * @return array - Returns an array in the format : array( packagename => description)
      */
     public function search($needle, $options = array())
     {
-        // TODO: Implement search() method.
+        return $this->Runner->search($needle, $options);
     }
 
     /**
      * Lists all installed packages
+     *
      * @param string $package
      * @param array $options
      * @return array - returns an array with all installed packages
      */
     public function show($package = "", $options = array())
     {
-        // TODO: Implement show() method.
+        return $this->Runner->show($package, $options);
     }
 
     /**
      * Clears the composer cache
+     *
      * @return bool - true on success; false on failure
      */
     public function clearCache()
     {
-        // TODO: Implement clearCache() method.
+        return $this->Runner->clearCache();
     }
 }
