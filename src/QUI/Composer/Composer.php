@@ -12,7 +12,7 @@ use QUI;
  *
  * @package QUI\Composer
  */
-class Composer implements QUI\Composer\Interfaces\Composer
+class Composer implements QUI\Composer\Interfaces\ComposerInterface
 {
     /**
      * @var int
@@ -25,7 +25,7 @@ class Composer implements QUI\Composer\Interfaces\Composer
     const MODE_WEB = 1;
 
     /**
-     * @var QUI\Composer\Interfaces\Composer
+     * @var QUI\Composer\Interfaces\ComposerInterface
      */
     private $Runner;
 

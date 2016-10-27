@@ -7,9 +7,10 @@ use Symfony\Component\Console\Input\ArrayInput;
 
 /**
  * Class Web
+ *
  * @package QUI\Composer
  */
-class Web implements QUI\Composer\Interfaces\Composer
+class Web implements QUI\Composer\Interfaces\ComposerInterface
 {
     private $Application;
     private $workingDir;
@@ -17,6 +18,7 @@ class Web implements QUI\Composer\Interfaces\Composer
 
     /**
      * (Composer) Web constructor.
+     *
      * @param string $workingDir
      * @param string $composerDir
      * @throws \Exception
@@ -25,7 +27,6 @@ class Web implements QUI\Composer\Interfaces\Composer
     {
         if (empty($composerDir)) {
             $this->composerDir = rtrim($workingDir, '/') . '/';
-            ;
         } else {
             $this->composerDir = rtrim($composerDir, '/') . '/';
         }
@@ -47,9 +48,9 @@ class Web implements QUI\Composer\Interfaces\Composer
         putenv("COMPOSER_HOME=" . $this->composerDir);
     }
 
-
     /**
      * Performs a composer install
+     *
      * @param array $options - additional options
      * @return \string[]
      */
@@ -57,6 +58,7 @@ class Web implements QUI\Composer\Interfaces\Composer
     {
         $this->resetComposer();
         chdir($this->workingDir);
+
         $params = array(
             "command"       => "install",
             "--prefer-dist" => true,
@@ -73,7 +75,6 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         return $Output->getLines();
     }
-
 
     /**
      * Performs a composer update
@@ -96,7 +97,7 @@ class Web implements QUI\Composer\Interfaces\Composer
         $Output = new ArrayOutput();
 
         $this->Application->run($Input, $Output);
-        
+
         return $Output->getLines();
     }
 
@@ -141,7 +142,9 @@ class Web implements QUI\Composer\Interfaces\Composer
     public function outdated($direct = false, $options = array())
     {
         $this->resetComposer();
+
         chdir($this->workingDir);
+
         $params = array(
             "command"       => "show",
             "--working-dir" => $this->workingDir,
@@ -154,32 +157,20 @@ class Web implements QUI\Composer\Interfaces\Composer
 
         $params = array_merge($params, $options);
 
-
         $Input  = new ArrayInput($params);
         $Output = new ArrayOutput();
-
 
         $this->Application->run($Input, $Output);
         $result = $Output->getLines();
 
-        $regex    = "~\\s+~";
+//        $regex    = "~\\s+~";
         $packages = array();
 
-        $ignoreList = array("<warning>You", "Reading");
         foreach ($result as $line) {
-            if (empty($line)) {
-                continue;
-            }
-            #Replace all spaces (multiple or single) by a single space
-            $line = preg_replace($regex, " ", trim($line));
+            $package = QUI\Composer\Utils\Parser::parsePackageLineToArray($line);
 
-            $words = explode(" ", $line);
-            if ($words[0] != "" &&
-                !empty($words[0]) &&
-                substr($words[0], 0, 1) != chr(8) &&
-                !in_array($words[0], $ignoreList)
-            ) {
-                $packages[] = $words[0];
+            if (!empty($package)) {
+                $packages[] = $package;
             }
         }
 
@@ -194,6 +185,7 @@ class Web implements QUI\Composer\Interfaces\Composer
     public function updatesAvailable($direct = false)
     {
         $this->resetComposer();
+
         if (count($this->outdated($direct)) > 0) {
             return true;
         }
@@ -209,7 +201,9 @@ class Web implements QUI\Composer\Interfaces\Composer
     public function dumpAutoload($options = array())
     {
         $this->resetComposer();
+
         chdir($this->workingDir);
+
         $params = array(
             "command"       => "dump-autoload",
             "--working-dir" => $this->workingDir
@@ -238,6 +232,7 @@ class Web implements QUI\Composer\Interfaces\Composer
         $packages = array();
 
         chdir($this->workingDir);
+
         $params = array(
             "command"       => "search",
             "tokens"        => array($needle),
@@ -294,8 +289,8 @@ class Web implements QUI\Composer\Interfaces\Composer
         $this->Application->run($Input, $Output);
 
         $lines = $Output->getLines();
-
         $regex = "~ +~";
+
         foreach ($lines as $line) {
             // Replace all spaces (multiple or single) by a single space
             $line  = preg_replace($regex, " ", $line);

@@ -10,7 +10,7 @@ use QUI;
  *
  * @package QUI\Composer
  */
-class CLI implements QUI\Composer\Interfaces\Composer
+class CLI implements QUI\Composer\Interfaces\ComposerInterface
 {
     /**
      * @var string
@@ -117,32 +117,24 @@ class CLI implements QUI\Composer\Interfaces\Composer
         // Parse output into array and remove empty lines
         $command = $this->phpPath;
         $command .= $this->composerDir . 'composer.phar';
-        $command .= ' --working-dir=' . $this->workingDir;
-        $command .= ' outdated --no-plugins';
+        $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
+        $command .= ' outdated';
+//        $command .= ' outdated --no-plugins';
 
         if ($direct) {
             $command .= ' --direct';
         }
 
         $command .= $this->getOptionString($options);
+        $packages = array();
 
         exec($command, $output, $statusCode);
 
-
-        $regex      = "~ +~";
-        $packages   = array();
-        $ignoreList = array("<warning>You", "Reading");
         foreach ($output as $line) {
-            // Replace all spaces (multiple or single) by a single space
-            $line  = preg_replace($regex, " ", $line);
-            $words = explode(" ", $line);
+            $package = QUI\Composer\Utils\Parser::parsePackageLineToArray($line);
 
-            if ($words[0] != ""
-                && !empty($words[0])
-                && substr($words[0], 0, 1) != chr(8)
-                && !in_array($words[0], $ignoreList)
-            ) {
-                $packages[] = $words[0];
+            if (!empty($package)) {
+                $packages[] = $package;
             }
         }
 
@@ -191,8 +183,8 @@ class CLI implements QUI\Composer\Interfaces\Composer
         // Parse output into array and remove empty lines
         $command = $this->phpPath;
         $command .= $this->composerDir . 'composer.phar';
-        $command .= ' search "' . escapeshellarg($needle).'"';
-        $command .= ' --working-dir=' . $this->workingDir;
+        $command .= ' search ' . escapeshellarg($needle);
+        $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
 
         $command .= $this->getOptionString($options);
 
@@ -280,7 +272,7 @@ class CLI implements QUI\Composer\Interfaces\Composer
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
         $command = $this->phpPath . ' ' . $this->composerDir . 'composer.phar';
-        $command .= ' --working-dir=' . $this->workingDir;
+        $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
 
         $command .= $this->getOptionString($options);
         $command .= ' ' . $cmd;

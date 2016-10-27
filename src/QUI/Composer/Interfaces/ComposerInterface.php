@@ -9,7 +9,7 @@ namespace QUI\Composer\Interfaces;
  * Interface Composer
  * @package QUI\Composer\Interfaces
  */
-interface Composer
+interface ComposerInterface
 {
     /**
      * Composer constructor.
