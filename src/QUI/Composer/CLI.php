@@ -108,6 +108,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param array $options
      * @return array - Returns false on failure and an array of packagenames on success
+     *
+     * @throws QUI\Composer\Exception
      */
     public function outdated($direct = false, $options = array())
     {
@@ -126,9 +128,24 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $command .= $this->getOptionString($options);
+        $command .= ' 2>&1';
+
         $packages = array();
 
         exec($command, $output, $statusCode);
+
+        $completeOutput = implode("\n", $output);
+
+        // find exeption
+        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+            foreach ($output as $key => $line) {
+                if (strpos($line, '[RuntimeException]') === false) {
+                    continue;
+                }
+
+                throw new QUI\Composer\Exception($output[$key + 1]);
+            }
+        }
 
         foreach ($output as $line) {
             $package = QUI\Composer\Utils\Parser::parsePackageLineToArray($line);
