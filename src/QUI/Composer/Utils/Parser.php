@@ -25,11 +25,22 @@ class Parser
             return array();
         }
 
+        $string = str_replace("\010", '', $string); // remove backspace
+        $string = trim($string);
+
         if (strpos($string, '<warning>You') !== false) {
             return array();
         }
 
-        if (strpos($string, 'Reading ') === 0) {
+        if (strpos($string, 'Reading') === 0) {
+            return array();
+        }
+
+        if (strpos($string, 'Failed') === 0) {
+            return array();
+        }
+
+        if (strpos($string, 'Importing') === 0) {
             return array();
         }
 

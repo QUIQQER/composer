@@ -130,10 +130,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $command .= $this->getOptionString($options);
         $command .= ' 2>&1';
 
-        $packages = array();
-
         exec($command, $output, $statusCode);
 
+        $packages       = array();
         $completeOutput = implode("\n", $output);
 
         // find exeption
