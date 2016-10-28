@@ -21,7 +21,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string $workingDir
      * @param string $composerDir
-     * @throws \Exception
+     *
+     * @throws \QUI\Composer\Exception
      */
     public function __construct($workingDir, $composerDir = "")
     {
@@ -33,12 +34,12 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         $this->workingDir = rtrim($workingDir, "/") . '/';
         if (!is_dir($workingDir)) {
-            throw new \Exception("Workingdirectory does not exist", 404);
+            throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
         }
 
 
         if (!file_exists($this->composerDir . "composer.json")) {
-            throw new \Exception("Composer.json not found", 404);
+            throw new QUI\Composer\Exception("Composer.json not found", 404);
         }
 
 
@@ -57,6 +58,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     public function install($options = array())
     {
         $this->resetComposer();
+
         chdir($this->workingDir);
 
         $params = array(
@@ -84,7 +86,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     public function update($options = array())
     {
         $this->resetComposer();
+
         chdir($this->workingDir);
+
         $params = array(
             "command"       => "update",
             "--prefer-dist" => true,
@@ -111,7 +115,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     public function requirePackage($package, $version = "", $options = array())
     {
         $this->resetComposer();
+
         chdir($this->workingDir);
+
         if (!empty($version)) {
             $package .= ":" . $version;
         }
@@ -135,9 +141,12 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Performs a composer outdated
+     *
      * @param bool $direct - Only direct dependencies
      * @param array $options
      * @return array - Array of package names
+     *
+     * @throws QUI\Composer\Exception
      */
     public function outdated($direct = false, $options = array())
     {
@@ -161,10 +170,21 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $Output = new ArrayOutput();
 
         $this->Application->run($Input, $Output);
-        $result = $Output->getLines();
-
-//        $regex    = "~\\s+~";
+        $result   = $Output->getLines();
         $packages = array();
+
+        $completeOutput = implode("\n", $result);
+
+        // find exeption
+        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+            foreach ($result as $key => $line) {
+                if (strpos($line, '[RuntimeException]') === false) {
+                    continue;
+                }
+
+                throw new QUI\Composer\Exception($result[$key + 1]);
+            }
+        }
 
         foreach ($result as $line) {
             $package = QUI\Composer\Utils\Parser::parsePackageLineToArray($line);
@@ -315,7 +335,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     public function clearCache()
     {
         $this->resetComposer();
+
         chdir($this->workingDir);
+
         $params = array(
             "command"       => "clear-cache",
             "--working-dir" => $this->workingDir

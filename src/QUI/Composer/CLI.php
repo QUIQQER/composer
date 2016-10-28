@@ -33,7 +33,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param string $workingDir
      * @param string $composerDir
      *
-     * @throws \Exception
+     * @throws \QUI\Composer\Exception
      */
     public function __construct($workingDir, $composerDir = "")
     {
@@ -44,7 +44,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
         if (!is_dir($workingDir)) {
-            throw new \Exception("Workingdirectory does not exist", 404);
+            throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
         }
 
         $this->phpPath = "";
@@ -298,7 +298,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $lastLine   = system($command, $statusCode);
 
         if ($statusCode != 0) {
-            throw new Exception(
+            throw new QUI\Composer\Exception(
                 "Execution failed . Errorcode : " . $statusCode . " Last output line : " . $lastLine,
                 $statusCode
             );
@@ -313,8 +313,10 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     private function getOptionString($options)
     {
         $optionString = "";
+
         foreach ($options as $option => $value) {
             $option = "--" . ltrim($option, "--");
+
             if ($value === true) {
                 $optionString .= ' ' . escapeshellarg($option);
             } else {
