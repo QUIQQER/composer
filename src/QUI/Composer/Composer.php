@@ -113,6 +113,18 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * Return the packages which could be updated
+     *
+     * @return array
+     *
+     * @throws \QUI\Composer\Exception
+     */
+    public function getOutdatedPackages()
+    {
+        return $this->Runner->getOutdatedPackages();
+    }
+
+    /**
      * Returns the current mode (Web or CLI) as int
      *
      * @return int

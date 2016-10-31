@@ -54,7 +54,7 @@ class Parser
         $result['package'] = trim(substr($string, 0, $spacePos));
 
         $result['version'] = trim(substr($versionTemp, 0, $spaceNext));
-        $result['version'] = str_replace('v', '', $result['version']);
+        $result['version'] = ltrim($result['version'], 'v');
 
         return $result;
     }

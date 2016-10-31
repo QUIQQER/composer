@@ -80,6 +80,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Performs a composer update
+     *
      * @param array $options - Additional options
      * @return \string[]
      */
@@ -107,6 +108,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Performs a composer require
+     *
      * @param $package - The package name
      * @param string $version - The package version
      * @param array $options
@@ -199,6 +201,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Checks if packages can be updated
+     *
      * @param bool $direct - Only direct dependencies
      * @return bool - true if updates are available, false if no updates are available
      */
@@ -214,7 +217,59 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * @return array
+     */
+    public function getOutdatedPackages()
+    {
+        $this->resetComposer();
+
+        chdir($this->workingDir);
+
+        $Input = new ArrayInput(array(
+            "command"       => "update",
+            "--working-dir" => $this->workingDir,
+            '--dry-run'     => true
+        ));
+
+        $Output = new ArrayOutput();
+
+        $this->Application->run($Input, $Output);
+        $output = $Output->getLines();
+
+        // filter the output
+        $result = array();
+
+        foreach ($output as $line) {
+            if (strpos($line, '- Updating') === false) {
+                continue;
+            }
+
+            $line = trim($line);
+            $line = str_replace('- Updating ', '', $line);
+            $line = explode(' to ', $line);
+
+            // old version
+            $firstSpace = strpos($line[0], ' ');
+            $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+
+            // new version
+            $firstSpace = strpos($line[1], ' ');
+            $newVersion = trim(substr($line[1], $firstSpace), '() ');
+            $package    = trim(substr($line[1], 0, $firstSpace));
+
+            $result[] = array(
+                'package'    => $package,
+                'version'    => $newVersion,
+                'oldVersion' => $oldVersion
+            );
+        }
+
+        return $result;
+    }
+
+    /**
      * Generates the autoloader files again without downloading anything
+     *
      * @param array $options
      * @return bool - true on success
      */
@@ -242,6 +297,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Searches the repositories for the given needle
+     *
      * @param $needle
      * @param array $options
      * @return array - Returns an array in the format : array( packagename => description)
@@ -281,6 +337,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Lists all installed packages
+     *
      * @param string $package
      * @param array $options
      * @return array - returns an array with all installed packages
@@ -330,6 +387,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Clears the composer cache
+     *
      * @return bool - true on success; false on failure
      */
     public function clearCache()

@@ -85,4 +85,12 @@ interface ComposerInterface
      * @return bool - true on success; false on failure
      */
     public function clearCache();
+
+    /**
+     * Return the packages which could be updated
+     *
+     * @return array
+     * @throws \QUI\Composer\Exception
+     */
+    public function getOutdatedPackages();
 }

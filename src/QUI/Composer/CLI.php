@@ -121,7 +121,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $command .= $this->composerDir . 'composer.phar';
         $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
         $command .= ' outdated';
-//        $command .= ' outdated --no-plugins';
 
         if ($direct) {
             $command .= ' --direct';
@@ -155,6 +154,48 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         return $packages;
+    }
+
+    /**
+     * Return the packages which could be updated
+     *
+     * @return array
+     */
+    public function getOutdatedPackages()
+    {
+        $output = $this->execComposer('update', array(
+            '--dry-run' => true
+        ));
+
+        // filter the output
+        $result = array();
+
+        foreach ($output as $line) {
+            if (strpos($line, '- Updating') === false) {
+                continue;
+            }
+
+            $line = trim($line);
+            $line = str_replace('- Updating ', '', $line);
+            $line = explode(' to ', $line);
+
+            // old version
+            $firstSpace = strpos($line[0], ' ');
+            $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+
+            // new version
+            $firstSpace = strpos($line[1], ' ');
+            $newVersion = trim(substr($line[1], $firstSpace), '() ');
+            $package    = trim(substr($line[1], 0, $firstSpace));
+
+            $result[] = array(
+                'package'    => $package,
+                'version'    => $newVersion,
+                'oldVersion' => $oldVersion
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -276,7 +317,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
-     * Execute the composer shell command
+     * Execute the composer shell command (system())
      *
      * @param $cmd - The command that should be executed
      * @param $options - Array of commandline paramters. Format : array(option => value)
@@ -291,7 +332,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
 
         $command .= $this->getOptionString($options);
-        $command .= ' ' . $cmd;
+        $command .= ' ' . escapeshellarg($cmd);
 
         $statusCode = 0;
         $lastLine   = system($command, $statusCode);
@@ -302,6 +343,47 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
                 $statusCode
             );
         }
+    }
+
+    /**
+     * Execute the composer shell command
+     *
+     * @param $cmd - The command that should be executed
+     * @param $options - Array of commandline paramters. Format : array(option => value)
+     * @return array
+     *
+     * @throws QUI\Composer\Exception
+     */
+    private function execComposer($cmd, $options = array())
+    {
+        chdir($this->workingDir);
+        putenv("COMPOSER_HOME=" . $this->composerDir);
+
+        // Parse output into array and remove empty lines
+        $command = $this->phpPath;
+        $command .= $this->composerDir . 'composer.phar';
+        $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
+        $command .= ' ' . escapeshellarg($cmd);
+
+        $command .= $this->getOptionString($options);
+        $command .= ' 2>&1';
+
+        exec($command, $output, $statusCode);
+
+        $completeOutput = implode("\n", $output);
+
+        // find exeption
+        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+            foreach ($output as $key => $line) {
+                if (strpos($line, '[RuntimeException]') === false) {
+                    continue;
+                }
+
+                throw new QUI\Composer\Exception($output[$key + 1]);
+            }
+        }
+
+        return $output;
     }
 
     /**
