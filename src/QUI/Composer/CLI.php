@@ -175,9 +175,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
                 continue;
             }
 
+            $line = str_replace("\010", '', $line); // remove backspace
             $line = trim($line);
             $line = str_replace('- Updating ', '', $line);
+            $line = str_replace('Reading ', "\nReading ", $line);
+
             $line = explode(' to ', $line);
+
 
             // old version
             $firstSpace = strpos($line[0], ' ');
@@ -188,12 +192,21 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $newVersion = trim(substr($line[1], $firstSpace), '() ');
             $package    = trim(substr($line[1], 0, $firstSpace));
 
+            if ($package == 'fxp/composer-asset-plugin') {
+                $packageStart = strpos($line[0], 'fxp/composer-asset-plugin');
+                $line[0]      = substr($line[0], $packageStart);
+
+                $firstSpace = strpos($line[0], ' ');
+                $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+            }
+
             $result[] = array(
                 'package'    => $package,
                 'version'    => $newVersion,
                 'oldVersion' => $oldVersion
             );
         }
+
 
         return $result;
     }
