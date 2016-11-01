@@ -65,7 +65,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function install($options = array())
     {
-        return $this->executeComposer('--prefer-dist install 2>&1', $options);
+        $options['prefer-dist'] = true;
+
+        return $this->executeComposer('install', $options);
     }
 
     /**
@@ -77,7 +79,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function update($options = array())
     {
-        return $this->executeComposer('--prefer-dist update 2>&1', $options);
+        $options['prefer-dist'] = true;
+
+        return $this->executeComposer('update', $options);
     }
 
     /**
@@ -91,14 +95,16 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function requirePackage($package, $version = "", $options = array())
     {
-        // Build an require string
-        $package = "'" . escapeshellarg($package) . "'";
+        $options['prefer-dist'] = true;
 
+        // Build an require string
         if (!empty($version)) {
-            $package .= ":'" . escapeshellarg($version) . "'";
+            $package .= ":" . $version;
         }
 
-        return $this->executeComposer('--prefer-dist  require ' . $package . ' 2>&1', $options);
+        $options['packages'] = $package;
+
+        return $this->executeComposer('require', $options);
     }
 
     /**
@@ -231,7 +237,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     public function dumpAutoload($options = array())
     {
         try {
-            $this->executeComposer('dump-autoload 2>&1', $options);
+            $this->executeComposer('dump-autoload', $options);
         } catch (Exception $Exception) {
             return false;
         }
@@ -316,12 +322,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Clears the composer cache
+     *
      * @return bool - true on success; false on failure
      */
     public function clearCache()
     {
         try {
-            $this->executeComposer('dump-autoload 2>&1');
+            $this->executeComposer('dump-autoload');
         } catch (Exception $Exception) {
             return false;
         }
@@ -338,14 +345,28 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     private function executeComposer($cmd, $options = array())
     {
+        $packages = array();
+
+        if (isset($options['packages'])) {
+            $packages = $options['packages'];
+            unset($options['packages']);
+        }
+
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
         $command = $this->phpPath . ' ' . $this->composerDir . 'composer.phar';
         $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
-
         $command .= $this->getOptionString($options);
         $command .= ' ' . escapeshellarg($cmd);
+
+        if (!empty($packages) && is_array($packages)) {
+            foreach ($packages as $package) {
+                $command .= ' ' . escapeshellarg($package);
+            }
+        }
+
+        $command .= ' 2>&1';
 
         $statusCode = 0;
         $lastLine   = system($command, $statusCode);
@@ -369,6 +390,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     private function execComposer($cmd, $options = array())
     {
+        $packages = array();
+
+        if (isset($options['packages'])) {
+            $packages = $options['packages'];
+            unset($options['packages']);
+        }
+
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
@@ -377,8 +405,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $command .= $this->composerDir . 'composer.phar';
         $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
         $command .= ' ' . escapeshellarg($cmd);
-
         $command .= $this->getOptionString($options);
+
+        if (!empty($packages) && is_array($packages)) {
+            foreach ($packages as $package) {
+                $command .= ' ' . escapeshellarg($package);
+            }
+        }
+
         $command .= ' 2>&1';
 
         exec($command, $output, $statusCode);
