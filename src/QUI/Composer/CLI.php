@@ -268,16 +268,30 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Searches the repositories for the given needle
      *
-     * @param $needle
+     * @param string|array $needle
      * @param array $options
      * @return array - Returns an array in the format : array( packagename => description)
      */
     public function search($needle, $options = array())
     {
-        $output   = $this->execComposer('search', $options);
+        $output   = $this->execComposer('search', $options, $needle);
         $packages = array();
 
         foreach ($output as $line) {
+            $line = str_replace("\010", '', $line); // remove backspace
+            $line = trim($line);
+            $line = str_replace('- Updating ', '', $line);
+            $line = str_replace('Reading ', "\nReading ", $line);
+            $line = trim($line);
+
+            if (strpos($line, 'Failed to') === 0) {
+                continue;
+            }
+
+            if (strpos($line, 'Reading ') === 0) {
+                continue;
+            }
+
             $split = explode(" ", $line, 2);
 
             if (isset($split[0]) && isset($split[1])) {
@@ -341,7 +355,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param $options - Array of commandline paramters. Format : array(option => value)
      * @throws Exception
      */
-    private function systemComposer($cmd, $options = array())
+    private function systemComposer($cmd, $options = array(), $tokens = array())
     {
         $packages = array();
 
@@ -358,9 +372,21 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $command .= $this->getOptionString($options);
         $command .= ' ' . escapeshellarg($cmd);
 
+        // packages list
         if (!empty($packages) && is_array($packages)) {
             foreach ($packages as $package) {
                 $command .= ' ' . escapeshellarg($package);
+            }
+        }
+
+        // tokens
+        if (!empty($tokens)) {
+            if (!is_array($tokens)) {
+                $tokens = array($tokens);
+            }
+
+            foreach ($tokens as $token) {
+                $command .= ' ' . escapeshellarg($token);
             }
         }
 
@@ -386,7 +412,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws QUI\Composer\Exception
      */
-    private function execComposer($cmd, $options = array())
+    private function execComposer($cmd, $options = array(), $tokens = array())
     {
         $packages = array();
 
@@ -405,9 +431,21 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $command .= ' ' . escapeshellarg($cmd);
         $command .= $this->getOptionString($options);
 
+        // packages list
         if (!empty($packages) && is_array($packages)) {
             foreach ($packages as $package) {
                 $command .= ' ' . escapeshellarg($package);
+            }
+        }
+
+        // tokens
+        if (!empty($tokens)) {
+            if (!is_array($tokens)) {
+                $tokens = array($tokens);
+            }
+
+            foreach ($tokens as $token) {
+                $command .= ' ' . escapeshellarg($token);
             }
         }
 
@@ -438,13 +476,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options - composer options
      * @return array|void
      */
-    private function runComposer($cmd, $options = array())
+    private function runComposer($cmd, $options = array(), $tokens = array())
     {
         if ($this->directOutput) {
-            return $this->systemComposer($cmd, $options);
+            return $this->systemComposer($cmd, $options, $tokens);
         }
 
-        return $this->execComposer($cmd, $options);
+        return $this->execComposer($cmd, $options, $tokens);
     }
 
     /**
