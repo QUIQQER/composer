@@ -257,8 +257,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $newVersion = trim(substr($line[1], $firstSpace), '() ');
             $package    = trim(substr($line[1], 0, $firstSpace));
 
-            if ($package == 'fxp/composer-asset-plugin') {
-                $packageStart = strpos($line[0], 'fxp/composer-asset-plugin');
+            if (strpos($oldVersion, 'Reading ') !== false) {
+                $packageStart = strpos($line[0], $package);
                 $line[0]      = substr($line[0], $packageStart);
 
                 $firstSpace = strpos($line[0], ' ');
