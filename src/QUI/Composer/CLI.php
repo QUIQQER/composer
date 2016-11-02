@@ -394,6 +394,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $command .= ' 2>&1';
 
+        QUI\System\Log::writeRecursive('system: ' . $command);
+
         $statusCode = 0;
         $lastLine   = system($command, $statusCode);
 
@@ -454,6 +456,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $command .= ' 2>&1';
+
+        QUI\System\Log::writeRecursive('exec: ' . $command);
 
         exec($command, $output, $statusCode);
 
