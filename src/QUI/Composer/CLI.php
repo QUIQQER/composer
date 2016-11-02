@@ -28,6 +28,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     protected $phpPath;
 
     /**
+     * @var bool
+     */
+    protected $directOutput = true;
+
+    /**
      * CLI constructor.
      *
      * @param string $workingDir
@@ -57,6 +62,26 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * Enables the direct output
+     * All composer execution displays the output
+     * composer execution is via system()
+     */
+    public function unmute()
+    {
+        $this->directOutput = true;
+    }
+
+    /**
+     * Disable the direct output
+     * All composer execution dont't displays the output
+     * composer execution is via exec()
+     */
+    public function mute()
+    {
+        $this->directOutput = false;
+    }
+
+    /**
      * Executes a composer install
      *
      * @param array $options - Additional options
@@ -65,9 +90,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function install($options = array())
     {
-        $options['prefer-dist'] = true;
+        if (!isset($options['prefer-dist'])) {
+            $options['prefer-dist'] = true;
+        }
 
-        return $this->executeComposer('install', $options);
+        return $this->runComposer('install', $options);
     }
 
     /**
@@ -79,9 +106,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function update($options = array())
     {
-        $options['prefer-dist'] = true;
+        if (!isset($options['prefer-dist'])) {
+            $options['prefer-dist'] = true;
+        }
 
-        return $this->executeComposer('update', $options);
+        return $this->runComposer('update', $options);
     }
 
     /**
@@ -95,7 +124,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function requirePackage($package, $version = "", $options = array())
     {
-        $options['prefer-dist'] = true;
+        if (!isset($options['prefer-dist'])) {
+            $options['prefer-dist'] = true;
+        }
 
         // Build an require string
         if (!empty($version)) {
@@ -104,7 +135,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $options['packages'] = $package;
 
-        return $this->executeComposer('require', $options);
+        return $this->runComposer('require', $options);
     }
 
     /**
@@ -119,23 +150,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function outdated($direct = false, $options = array())
     {
-        chdir($this->workingDir);
-        putenv("COMPOSER_HOME=" . $this->composerDir);
-
-        // Parse output into array and remove empty lines
-        $command = $this->phpPath;
-        $command .= $this->composerDir . 'composer.phar';
-        $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
-        $command .= ' outdated';
-
         if ($direct) {
-            $command .= ' --direct';
+            $options['--direct'] = true;
         }
 
-        $command .= $this->getOptionString($options);
-        $command .= ' 2>&1';
-
-        exec($command, $output, $statusCode);
+        $output = $this->execComposer('outdated', $options);
 
         $packages       = array();
         $completeOutput = implode("\n", $output);
@@ -231,13 +250,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Generates the autoloader files again without downloading anything
+     *
      * @param array $options
      * @return bool - true on success
      */
     public function dumpAutoload($options = array())
     {
         try {
-            $this->executeComposer('dump-autoload', $options);
+            $this->execComposer('dump-autoload', $options);
         } catch (Exception $Exception) {
             return false;
         }
@@ -247,25 +267,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Searches the repositories for the given needle
+     *
      * @param $needle
      * @param array $options
      * @return array - Returns an array in the format : array( packagename => description)
      */
     public function search($needle, $options = array())
     {
-        chdir($this->workingDir);
-        putenv("COMPOSER_HOME=" . $this->composerDir);
-
-        // Parse output into array and remove empty lines
-        $command = $this->phpPath;
-        $command .= $this->composerDir . 'composer.phar';
-        $command .= ' search ' . escapeshellarg($needle);
-        $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
-
-        $command .= $this->getOptionString($options);
-
-        exec($command, $output, $statusCode);
-
+        $output   = $this->execComposer('search', $options);
         $packages = array();
 
         foreach ($output as $line) {
@@ -281,25 +290,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Lists all installed packages
+     *
      * @param string $package
      * @param array $options
      * @return array - returns an array with all installed packages
      */
     public function show($package = "", $options = array())
     {
-        chdir($this->workingDir);
-        putenv("COMPOSER_HOME=" . $this->composerDir);
-
-        // Parse output into array and remove empty lines
-        $command = $this->phpPath;
-        $command .= $this->composerDir . 'composer.phar';
-        $command .= ' --working-dir=' . $this->workingDir;
-        $command .= ' show --no-plugins';
-
-        $command .= $this->getOptionString($options);
-
-        exec($command, $output, $statusCode);
-
+        $output   = $this->execComposer('show', $options);
         $regex    = "~ +~";
         $packages = array();
 
@@ -328,7 +326,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     public function clearCache()
     {
         try {
-            $this->executeComposer('dump-autoload');
+            $this->execComposer('dump-autoload');
         } catch (Exception $Exception) {
             return false;
         }
@@ -343,7 +341,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param $options - Array of commandline paramters. Format : array(option => value)
      * @throws Exception
      */
-    private function executeComposer($cmd, $options = array())
+    private function systemComposer($cmd, $options = array())
     {
         $packages = array();
 
@@ -431,6 +429,22 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         return $output;
+    }
+
+    /**
+     * Runs the composer
+     *
+     * @param string $cmd - composer command
+     * @param array $options - composer options
+     * @return array|void
+     */
+    private function runComposer($cmd, $options = array())
+    {
+        if ($this->directOutput) {
+            return $this->systemComposer($cmd, $options);
+        }
+
+        return $this->execComposer($cmd, $options);
     }
 
     /**

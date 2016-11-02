@@ -12,8 +12,19 @@ use Symfony\Component\Console\Input\ArrayInput;
  */
 class Web implements QUI\Composer\Interfaces\ComposerInterface
 {
+    /**
+     * @var Application
+     */
     private $Application;
+
+    /**
+     * @var string
+     */
     private $workingDir;
+
+    /**
+     * @var string
+     */
     private $composerDir;
 
     /**
@@ -47,6 +58,20 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $this->Application->setAutoExit(false);
 
         putenv("COMPOSER_HOME=" . $this->composerDir);
+    }
+
+    /**
+     * Do nothing, because the direct class execution makes no direct output
+     */
+    public function unmute()
+    {
+    }
+
+    /**
+     * Do nothing, because the direct class execution makes no direct output
+     */
+    public function mute()
+    {
     }
 
     /**
