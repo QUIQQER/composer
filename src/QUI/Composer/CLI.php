@@ -353,6 +353,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param $cmd - The command that should be executed
      * @param $options - Array of commandline paramters. Format : array(option => value)
+     * @param $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     *
      * @throws Exception
      */
     private function systemComposer($cmd, $options = array(), $tokens = array())
@@ -408,6 +410,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param $cmd - The command that should be executed
      * @param $options - Array of commandline paramters. Format : array(option => value)
+     * @param $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     *
      * @return array
      *
      * @throws QUI\Composer\Exception
@@ -474,6 +478,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string $cmd - composer command
      * @param array $options - composer options
+     * @param $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     *
      * @return array|void
      */
     private function runComposer($cmd, $options = array(), $tokens = array())
