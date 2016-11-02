@@ -178,4 +178,17 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     {
         return $this->Runner->clearCache();
     }
+
+    /**
+     *
+     */
+    public function mute()
+    {
+        return $this->Runner->clearCache();
+    }
+
+    public function unmute()
+    {
+        return $this->Runner->unmute();
+    }
 }

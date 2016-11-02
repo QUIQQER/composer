@@ -1,4 +1,5 @@
 <?php
+
 namespace QUI\Composer;
 
 use QUI;
