@@ -370,6 +370,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
         $command = $this->phpPath . ' ' . $this->composerDir . 'composer.phar';
+
+        if ($this->isFCGI()) {
+            $command .= ' -d register_argc_argv=1';
+        }
+
         $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
         $command .= $this->getOptionString($options);
         $command .= ' ' . escapeshellarg($cmd);
@@ -433,6 +438,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         // Parse output into array and remove empty lines
         $command = $this->phpPath;
         $command .= $this->composerDir . 'composer.phar';
+
+        if ($this->isFCGI()) {
+            $command .= ' -d register_argc_argv=1';
+        }
+        
         $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
         $command .= ' ' . escapeshellarg($cmd);
         $command .= $this->getOptionString($options);
@@ -515,5 +525,23 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         return $optionString;
+    }
+
+    /**
+     * Is FastCGI / FCGI enabled?
+     *
+     * @return bool
+     */
+    protected function isFCGI()
+    {
+        if (!function_exists('php_sapi_name')) {
+            return false;
+        }
+
+        if (substr(php_sapi_name(), 0, 3) == 'cgi') {
+            return true;
+        }
+
+        return false;
     }
 }
