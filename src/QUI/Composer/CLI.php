@@ -25,7 +25,12 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * @var string
      */
-    protected $phpPath;
+    protected $phpPath = null;
+
+    /**
+     * @var bool
+     */
+    protected $isFCGI = null;
 
     /**
      * @var bool
@@ -51,14 +56,57 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         if (!is_dir($workingDir)) {
             throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
         }
+//
+//        $this->phpPath = "";
+//
+//        if (defined('PHP_BINARY') && !empty(PHP_BINARY)) {
+//            $this->phpPath = PHP_BINARY . " ";
+//        } else {
+//            $this->phpPath = "php ";
+//        }
+    }
 
-        $this->phpPath = "";
-
-        if (defined('PHP_BINARY') && !empty(PHP_BINARY)) {
-            $this->phpPath = PHP_BINARY . " ";
-        } else {
-            $this->phpPath = "php ";
+    /**
+     * Return the executable php path
+     *
+     * @return string
+     */
+    protected function getPHPPath()
+    {
+        if ($this->phpPath) {
+            return $this->phpPath;
         }
+
+        if (!defined('PHP_BINARY')) {
+            $this->phpPath = 'php ';
+            $this->isFCGI  = false;
+
+            return $this->phpPath;
+        }
+
+        if ($this->isFCGI()) {
+            // test if normal php can be executed
+            $output = shell_exec('php -i');
+
+            if (strpos($output, '_SERVER') !== false
+                && strpos($output, 'PHP License') !== false
+            ) {
+                $this->isFCGI  = false;
+                $this->phpPath = 'php ';
+
+                return $this->phpPath;
+            }
+
+            $this->isFCGI  = true;
+            $this->phpPath = PHP_BINARY . ' ';
+
+            return $this->phpPath;
+        }
+
+        $this->isFCGI  = false;
+        $this->phpPath = 'php ';
+
+        return $this->phpPath;
     }
 
     /**
@@ -369,7 +417,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
-        $command = $this->phpPath . ' ' . $this->composerDir . 'composer.phar';
+        $command = $this->getPHPPath() . ' ' . $this->composerDir . 'composer.phar';
 
         if ($this->isFCGI()) {
             $command .= ' -d register_argc_argv=1';
@@ -436,13 +484,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
         // Parse output into array and remove empty lines
-        $command = $this->phpPath;
+        $command = $this->getPHPPath();
         $command .= $this->composerDir . 'composer.phar';
 
         if ($this->isFCGI()) {
             $command .= ' -d register_argc_argv=1';
         }
-        
+
         $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
         $command .= ' ' . escapeshellarg($cmd);
         $command .= $this->getOptionString($options);
@@ -534,14 +582,21 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     protected function isFCGI()
     {
+        if (!is_null($this->isFCGI)) {
+            return $this->isFCGI;
+        }
+
         if (!function_exists('php_sapi_name')) {
-            return false;
+            $this->isFCGI = false;
+            return $this->isFCGI;
         }
 
         if (substr(php_sapi_name(), 0, 3) == 'cgi') {
-            return true;
+            $this->isFCGI = true;
+            return $this->isFCGI;
         }
 
-        return false;
+        $this->isFCGI = false;
+        return $this->isFCGI;
     }
 }
