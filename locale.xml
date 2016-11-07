@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<locales>
+    <groups name="quiqqer/composer" datatype="js,php">
+        <locale name="package.title">
+            <de><![CDATA[QUIQQER - Composer]]></de>
+            <en><![CDATA[QUIQQER - Composer]]></en>
+        </locale>
+        <locale name="package.description">
+            <de><![CDATA[QUIQQER - Composer Schnittstelle]]></de>
+            <en><![CDATA[QUIQQER - Composer API Bridge]]></en>
+        </locale>
+    </groups>
+</locales>

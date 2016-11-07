@@ -1,3 +1,7 @@
 <?php
 
-require_once dirname(dirname(__FILE__)) . '/vendor/autoload.php';
+$quiqqerPackageDir = dirname(dirname(__FILE__));
+$packageDir        = dirname(dirname($quiqqerPackageDir));
+
+// include quiqqer bootstrap for tests
+require $packageDir . '/quiqqer/quiqqer/tests/bootstrap.php';
