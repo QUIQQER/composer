@@ -27,38 +27,81 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * @var QUI\Composer\Interfaces\ComposerInterface
      */
-    private $Runner;
+    protected $Runner;
 
     /**
      * @var int
      */
-    private $mode;
+    protected $mode;
 
     /**
-     * @inheritdoc
+     * @var bool
+     */
+    protected $mute = false;
+
+    /**
+     * @var string
+     */
+    protected $workingDir;
+
+    /**
+     * @var string
+     */
+    protected $composerDir;
+
+    /**
      * Composer constructor.
      * Can be used as general accespoint to composer.
      * Will use CLI composer if shell_exec is available
      *
      * @param string $workingDir
+     * @param string $composerDir
      */
     public function __construct($workingDir, $composerDir = "")
     {
+        $this->workingDir  = $workingDir;
+        $this->composerDir = $composerDir;
+
         if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
-            $this->Runner = new CLI($workingDir, $composerDir);
-            $this->mode   = self::MODE_CLI;
-            return;
+            $this->setMode(self::MODE_CLI);
+        } else {
+            $this->setMode(self::MODE_WEB);
+        }
+    }
+
+    /**
+     * Set the composer mode
+     * CLI, or web
+     *
+     * @param int $mode - self::MODE_CLI, self::MODE_WEB
+     */
+    public function setMode($mode)
+    {
+        switch ($mode) {
+            case self::MODE_CLI:
+                $this->Runner = new CLI($this->workingDir, $this->composerDir);
+                $this->mode   = self::MODE_CLI;
+                break;
+
+            case self::MODE_WEB:
+                $this->Runner = new Web($this->workingDir, $this->composerDir);
+                $this->mode   = self::MODE_WEB;
+                break;
         }
 
-        $this->Runner = new Web($workingDir, $composerDir);
-        $this->mode   = self::MODE_WEB;
+        if ($this->mute()) {
+            $this->Runner->mute();
+        } else {
+            $this->Runner->unmute();
+        }
     }
 
     /**
      * Executes composers update command
      *
      * @param array $options
-     * @return \string[]
+     *
+     * @return string
      */
     public function update($options = array())
     {
@@ -69,7 +112,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * Executes composers install command
      *
      * @param array $options
-     * @return \string[]
+     *
+     * @return string
      */
     public function install($options = array())
     {
@@ -82,7 +126,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * @param string $package - Name of the package : i.E. 'quiqqer/quiqqer'
      * @param string $version
      * @param array $options
-     * @return \string[]
+     *
+     * @return string
      */
     public function requirePackage($package, $version = "", $options = array())
     {
@@ -94,7 +139,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param bool $direct
      * @param array $options
-     * @return array|\string[]
+     *
+     * @return array|string
      */
     public function outdated($direct = false, $options = array())
     {
@@ -138,6 +184,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * Generates the autoloader files again without downloading anything
      *
      * @param array $options
+     *
      * @return bool - true on success
      */
     public function dumpAutoload($options = array())
@@ -150,6 +197,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param $needle
      * @param array $options
+     *
      * @return array - Returns an array in the format : array( packagename => description)
      */
     public function search($needle, $options = array())
@@ -162,6 +210,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string $package
      * @param array $options
+     *
      * @return array - returns an array with all installed packages
      */
     public function show($package = "", $options = array())
@@ -184,6 +233,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function mute()
     {
+        $this->mute = true;
+
         return $this->Runner->mute();
     }
 
@@ -192,6 +243,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function unmute()
     {
+        $this->mute = false;
+
         return $this->Runner->unmute();
     }
 }

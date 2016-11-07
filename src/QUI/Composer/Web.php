@@ -16,17 +16,17 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * @var Application
      */
-    private $Application;
+    protected $Application;
 
     /**
      * @var string
      */
-    private $workingDir;
+    protected $workingDir;
 
     /**
      * @var string
      */
-    private $composerDir;
+    protected $composerDir;
 
     /**
      * (Composer) Web constructor.
@@ -448,7 +448,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Resets composer to avoid caching issues.
      */
-    private function resetComposer()
+    protected function resetComposer()
     {
         $this->Application = new Application();
         $this->Application->setAutoExit(false);

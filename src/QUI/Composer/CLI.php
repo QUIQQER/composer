@@ -405,7 +405,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws Exception
      */
-    private function systemComposer($cmd, $options = array(), $tokens = array())
+    protected function systemComposer($cmd, $options = array(), $tokens = array())
     {
         $packages = array();
 
@@ -471,7 +471,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws QUI\Composer\Exception
      */
-    private function execComposer($cmd, $options = array(), $tokens = array())
+    protected function execComposer($cmd, $options = array(), $tokens = array())
     {
         $packages = array();
 
@@ -544,7 +544,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array|void
      */
-    private function runComposer($cmd, $options = array(), $tokens = array())
+    protected function runComposer($cmd, $options = array(), $tokens = array())
     {
         if ($this->directOutput) {
             return $this->systemComposer($cmd, $options, $tokens);
@@ -558,7 +558,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options
      * @return string
      */
-    private function getOptionString($options)
+    protected function getOptionString($options)
     {
         $optionString = "";
 
