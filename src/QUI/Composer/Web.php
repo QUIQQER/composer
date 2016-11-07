@@ -38,6 +38,18 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function __construct($workingDir, $composerDir = "")
     {
+        // we must set argv params for composer
+        $_SERVER['argv'][0] = pathinfo(__FILE__, \PATHINFO_BASENAME);
+        $_SERVER['argc']    = 1;
+
+        // we need that for hirak/prestissimo
+        $GLOBALS['argv'] = $_SERVER['argv'];
+
+        if (!defined('STDIN')) {
+            define('STDIN', fopen("php://stdin", "r"));
+        }
+
+
         if (empty($composerDir)) {
             $this->composerDir = rtrim($workingDir, '/') . '/';
         } else {
@@ -338,27 +350,27 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function search($needle, $options = array())
     {
-        $this->resetComposer();
+        $result = $this->executeComposer('search', array(
+            "tokens" => array($needle)
+        ));
+
         $packages = array();
 
-        chdir($this->workingDir);
+        foreach ($result as $line) {
+            $line = str_replace("\010", '', $line); // remove backspace
+            $line = trim($line);
+            $line = str_replace('- Updating ', '', $line);
+            $line = str_replace('Reading ', "\nReading ", $line);
+            $line = trim($line);
 
-        $params = array(
-            "command"       => "search",
-            "tokens"        => array($needle),
-            "--working-dir" => $this->workingDir
-        );
+            if (strpos($line, 'Failed to') === 0) {
+                continue;
+            }
 
-        $params = array_merge($params, $options);
+            if (strpos($line, 'Reading ') === 0) {
+                continue;
+            }
 
-        $Input  = new ArrayInput($params);
-        $Output = new ArrayOutput();
-
-        $this->Application->run($Input, $Output);
-
-        $lines = $Output->getLines();
-
-        foreach ($lines as $line) {
             $split = explode(" ", $line, 2);
 
             if (isset($split[0]) && isset($split[1])) {
@@ -452,5 +464,60 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     {
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
+    }
+
+    /**
+     * Execute the composer
+     *
+     * @param $command
+     * @param array $options
+     * @return \string[]
+     * @throws Exception
+     */
+    protected function executeComposer($command, $options = array())
+    {
+        $this->resetComposer();
+
+        chdir($this->workingDir);
+
+        $params = array_merge(array(
+            "command"       => $command,
+            "--working-dir" => $this->workingDir
+//            '-vvv'          => true
+        ), $options);
+
+        $Input  = new ArrayInput($params);
+        $Output = new ArrayOutput();
+
+        ob_start();
+        $this->Application->run($Input, $Output);
+        ob_get_clean();
+        ob_end_clean();
+
+        $output         = $Output->getLines();
+        $completeOutput = implode("\n", $output);
+
+        // find exeption
+        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+            foreach ($output as $key => $line) {
+                if (strpos($line, '[RuntimeException]') === false) {
+                    continue;
+                }
+
+                throw new QUI\Composer\Exception($output[$key + 1]);
+            }
+        }
+
+        if (strpos($completeOutput, '[ErrorException]') !== false) {
+            foreach ($output as $key => $line) {
+                if (strpos($line, '[ErrorException]') === false) {
+                    continue;
+                }
+
+                throw new QUI\Composer\Exception($output[$key + 1]);
+            }
+        }
+
+        return $output;
     }
 }
