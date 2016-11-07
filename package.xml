@@ -1,0 +1,13 @@
+<quiqqer>
+    <package>
+        <title>
+            <locale group="quiqqer/composer" var="package.title"/>
+        </title>
+
+        <description>
+            <locale group="quiqqer/composer" var="package.description"/>
+        </description>
+
+        <image src="URL_OPT_DIR/quiqqer/composer/bin/package.png"/>
+    </package>
+</quiqqer>
