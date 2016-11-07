@@ -91,57 +91,30 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Performs a composer install
      *
      * @param array $options - additional options
-     * @return \string[]
+     * @return array
      */
     public function install($options = array())
     {
-        $this->resetComposer();
+        if (!isset($options['--prefer-dist'])) {
+            $options['--prefer-dist'] = true;
+        }
 
-        chdir($this->workingDir);
-
-        $params = array(
-            "command"       => "install",
-            "--prefer-dist" => true,
-            "--working-dir" => $this->workingDir
-        );
-
-        $params = array_merge($params, $options);
-
-        $Input  = new ArrayInput($params);
-        $Output = new ArrayOutput();
-
-        $this->Application->run($Input, $Output);
-
-
-        return $Output->getLines();
+        return $this->executeComposer('install', $options);
     }
 
     /**
      * Performs a composer update
      *
      * @param array $options - Additional options
-     * @return \string[]
+     * @return array
      */
     public function update($options = array())
     {
-        $this->resetComposer();
+        if (!isset($options['--prefer-dist'])) {
+            $options['--prefer-dist'] = true;
+        }
 
-        chdir($this->workingDir);
-
-        $params = array(
-            "command"       => "update",
-            "--prefer-dist" => true,
-            "--working-dir" => $this->workingDir
-        );
-
-        $params = array_merge($params, $options);
-
-        $Input  = new ArrayInput($params);
-        $Output = new ArrayOutput();
-
-        $this->Application->run($Input, $Output);
-
-        return $Output->getLines();
+        return $this->executeComposer('update', $options);
     }
 
     /**
@@ -150,33 +123,22 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param $package - The package name
      * @param string $version - The package version
      * @param array $options
-     * @return \string[]
+     *
+     * @return array
      */
     public function requirePackage($package, $version = "", $options = array())
     {
-        $this->resetComposer();
-
-        chdir($this->workingDir);
+        if (!isset($options['--prefer-dist'])) {
+            $options['--prefer-dist'] = true;
+        }
 
         if (!empty($version)) {
             $package .= ":" . $version;
         }
 
-        $params = array(
-            "command"       => "require",
-            "packages"      => array($package),
-            "--working-dir" => $this->workingDir,
-            "--prefer-dist" => true
-        );
+        $options['tokens'] = array($package);
 
-        $params = array_merge($params, $options);
-
-        $Input  = new ArrayInput($params);
-        $Output = new ArrayOutput();
-
-        $this->Application->run($Input, $Output);
-
-        return $Output->getLines();
+        return $this->executeComposer('require', $options);
     }
 
     /**
@@ -184,48 +146,20 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param bool $direct - Only direct dependencies
      * @param array $options
+     *
      * @return array - Array of package names
      *
      * @throws QUI\Composer\Exception
      */
     public function outdated($direct = false, $options = array())
     {
-        $this->resetComposer();
+        $result = $this->executeComposer('show', array(
+            '--outdated' => true
+        ));
 
-        chdir($this->workingDir);
-
-        $params = array(
-            "command"       => "show",
-            "--working-dir" => $this->workingDir,
-            "--outdated"    => true
-        );
-
-        if ($direct) {
-            $params['--direct'] = true;
-        }
-
-        $params = array_merge($params, $options);
-
-        $Input  = new ArrayInput($params);
-        $Output = new ArrayOutput();
-
-        $this->Application->run($Input, $Output);
-        $result   = $Output->getLines();
         $packages = array();
 
-        $completeOutput = implode("\n", $result);
-
         // find exeption
-        if (strpos($completeOutput, '[RuntimeException]') !== false) {
-            foreach ($result as $key => $line) {
-                if (strpos($line, '[RuntimeException]') === false) {
-                    continue;
-                }
-
-                throw new QUI\Composer\Exception($result[$key + 1]);
-            }
-        }
-
         foreach ($result as $line) {
             $package = QUI\Composer\Utils\Parser::parsePackageLineToArray($line);
 
@@ -241,6 +175,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Checks if packages can be updated
      *
      * @param bool $direct - Only direct dependencies
+     *
      * @return bool - true if updates are available, false if no updates are available
      */
     public function updatesAvailable($direct = false)
@@ -255,24 +190,15 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * Return all outdated packages
+     *
      * @return array
      */
     public function getOutdatedPackages()
     {
-        $this->resetComposer();
-
-        chdir($this->workingDir);
-
-        $Input = new ArrayInput(array(
-            "command"       => "update",
-            "--working-dir" => $this->workingDir,
-            '--dry-run'     => true
+        $output = $this->executeComposer('update', array(
+            '--dry-run' => true
         ));
-
-        $Output = new ArrayOutput();
-
-        $this->Application->run($Input, $Output);
-        $output = $Output->getLines();
 
         // filter the output
         $result = array();
@@ -317,27 +243,12 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Generates the autoloader files again without downloading anything
      *
      * @param array $options
+     *
      * @return bool - true on success
      */
     public function dumpAutoload($options = array())
     {
-        $this->resetComposer();
-
-        chdir($this->workingDir);
-
-        $params = array(
-            "command"       => "dump-autoload",
-            "--working-dir" => $this->workingDir
-        );
-
-        $params = array_merge($params, $options);
-
-        $Input  = new ArrayInput($params);
-        $Output = new ArrayOutput();
-
-        $this->Application->run($Input, $Output);
-
-
+        $this->executeComposer('dump-autoload', $options);
         return true;
     }
 
@@ -346,6 +257,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param $needle
      * @param array $options
+     *
      * @return array - Returns an array in the format : array( packagename => description)
      */
     public function search($needle, $options = array())
@@ -386,35 +298,20 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string $package
      * @param array $options
+     *
      * @return array - returns an array with all installed packages
      */
     public function show($package = "", $options = array())
     {
-        $this->resetComposer();
-        $packages = array();
-
-        chdir($this->workingDir);
-        $params = array(
-            "command"       => "show",
-            "--working-dir" => $this->workingDir
-        );
-
         if (!empty($package)) {
-            $params['package'] = $package;
+            $options["tokens"] = array($package);
         }
 
-        $params = array_merge($params, $options);
+        $result   = $this->executeComposer('show', $options);
+        $regex    = "~ +~";
+        $packages = array();
 
-        $Input  = new ArrayInput($params);
-        $Output = new ArrayOutput();
-
-
-        $this->Application->run($Input, $Output);
-
-        $lines = $Output->getLines();
-        $regex = "~ +~";
-
-        foreach ($lines as $line) {
+        foreach ($result as $line) {
             // Replace all spaces (multiple or single) by a single space
             $line  = preg_replace($regex, " ", $line);
             $words = explode(" ", $line);
@@ -471,7 +368,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param $command
      * @param array $options
-     * @return \string[]
+     *
+     * @return array
+     *
      * @throws Exception
      */
     protected function executeComposer($command, $options = array())
