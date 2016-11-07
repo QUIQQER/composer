@@ -414,6 +414,10 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             unset($options['packages']);
         }
 
+        if (is_string($packages)) {
+            $packages = array($packages);
+        }
+
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
@@ -480,6 +484,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             unset($options['packages']);
         }
 
+        if (is_string($packages)) {
+            $packages = array($packages);
+        }
+
+
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
@@ -514,7 +523,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $command .= ' 2>&1';
-
+        
 //        QUI\System\Log::writeRecursive('exec: ' . $command);
 
         exec($command, $output, $statusCode);
@@ -588,15 +597,18 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         if (!function_exists('php_sapi_name')) {
             $this->isFCGI = false;
+
             return $this->isFCGI;
         }
 
         if (substr(php_sapi_name(), 0, 3) == 'cgi') {
             $this->isFCGI = true;
+
             return $this->isFCGI;
         }
 
         $this->isFCGI = false;
+
         return $this->isFCGI;
     }
 }
