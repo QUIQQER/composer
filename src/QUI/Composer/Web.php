@@ -390,8 +390,11 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         ob_start();
         $this->Application->run($Input, $Output);
-        ob_get_clean();
-        ob_end_clean();
+
+        if (ob_get_contents()) {
+            ob_get_clean();
+            ob_end_clean();
+        }
 
         $output         = $Output->getLines();
         $completeOutput = implode("\n", $output);
