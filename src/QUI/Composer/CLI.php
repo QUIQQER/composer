@@ -84,15 +84,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             return $this->phpPath;
         }
 
-        if ($this->isFCGI()) {
-            $this->isFCGI  = true;
-            $this->phpPath = PHP_BINARY . ' ';
-
-            return $this->phpPath;
-        }
-
-        $this->isFCGI  = false;
-        $this->phpPath = 'php ';
+        $this->isFCGI();
+        $this->phpPath = PHP_BINARY . ' ';
 
         return $this->phpPath;
     }
