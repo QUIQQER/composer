@@ -85,18 +85,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         if ($this->isFCGI()) {
-            // test if normal php can be executed
-            $output = shell_exec('php -i');
-
-            if (strpos($output, '_SERVER') !== false
-                && strpos($output, 'PHP License') !== false
-            ) {
-                $this->isFCGI  = false;
-                $this->phpPath = 'php ';
-
-                return $this->phpPath;
-            }
-
             $this->isFCGI  = true;
             $this->phpPath = PHP_BINARY . ' ';
 
@@ -523,7 +511,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $command .= ' 2>&1';
-        
+
 //        QUI\System\Log::writeRecursive('exec: ' . $command);
 
         exec($command, $output, $statusCode);
