@@ -140,7 +140,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $packages = array($packages);
         }
 
-        $options['tokens'] = $packages;
+        $options['packages'] = $packages;
 
         return $this->executeComposer('require', $options);
     }
@@ -403,25 +403,27 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $output         = $Output->getLines();
         $completeOutput = implode("\n", $output);
 
-        // find exeption
-        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+        // find exception
+        $throwExceptionType = function ($exceptionType) use ($output) {
             foreach ($output as $key => $line) {
-                if (strpos($line, '[RuntimeException]') === false) {
+                if (strpos($line, $exceptionType) === false) {
                     continue;
                 }
 
                 throw new QUI\Composer\Exception($output[$key + 1]);
             }
+        };
+
+        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+            $throwExceptionType('[RuntimeException]');
+        }
+
+        if (strpos($completeOutput, '[Symfony\Component\Console\Exception\InvalidArgumentException]') !== false) {
+            $throwExceptionType('[Symfony\Component\Console\Exception\InvalidArgumentException]');
         }
 
         if (strpos($completeOutput, '[ErrorException]') !== false) {
-            foreach ($output as $key => $line) {
-                if (strpos($line, '[ErrorException]') === false) {
-                    continue;
-                }
-
-                throw new QUI\Composer\Exception($output[$key + 1]);
-            }
+            $throwExceptionType('[ErrorException]');
         }
 
         return $output;
