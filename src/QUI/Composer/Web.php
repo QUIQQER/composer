@@ -120,23 +120,27 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer require
      *
-     * @param $package - The package name
+     * @param string|array $packages - The package name
      * @param string $version - The package version
      * @param array $options
      *
      * @return array
      */
-    public function requirePackage($package, $version = "", $options = array())
+    public function requirePackage($packages, $version = "", $options = array())
     {
         if (!isset($options['--prefer-dist'])) {
             $options['--prefer-dist'] = true;
         }
 
-        if (!empty($version)) {
-            $package .= ":" . $version;
+        if (!empty($version) && is_string($packages)) {
+            $packages .= ":" . $version;
         }
 
-        $options['tokens'] = array($package);
+        if (!is_array($packages)) {
+            $packages = array($packages);
+        }
+
+        $options['tokens'] = $packages;
 
         return $this->executeComposer('require', $options);
     }

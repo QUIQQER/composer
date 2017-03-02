@@ -123,15 +123,15 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes composers require command
      *
-     * @param string $package - Name of the package : i.E. 'quiqqer/quiqqer'
+     * @param string|array $packages - Name of the package : i.E. 'quiqqer/quiqqer' or list of packages
      * @param string $version
      * @param array $options
      *
      * @return string
      */
-    public function requirePackage($package, $version = "", $options = array())
+    public function requirePackage($packages, $version = "", $options = array())
     {
-        return $this->Runner->requirePackage($package, $version);
+        return $this->Runner->requirePackage($packages, $version);
     }
 
     /**

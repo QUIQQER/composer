@@ -51,7 +51,7 @@ interface ComposerInterface
     /**
      * Executes the composer require command
      *
-     * @param $package
+     * @param string|array $package
      * @param string $version
      * @param array $options
      *
