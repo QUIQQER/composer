@@ -126,6 +126,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $this->runComposer('install', $options);
+
         return true;
     }
 
@@ -145,6 +146,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $this->runComposer('update', $options);
+
         return true;
     }
 
@@ -172,6 +174,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $options['packages'] = $packages;
 
         $this->runComposer('require', $options);
+
         return true;
     }
 
@@ -280,7 +283,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return bool
      */
-    public function updatesAvailable($direct)
+    public function updatesAvailable($direct = false)
     {
         return count($this->outdated($direct)) > 0 ? true : false;
     }
@@ -547,6 +550,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     {
         if ($this->directOutput) {
             $this->systemComposer($cmd, $options, $tokens);
+
             return array();
         }
 
