@@ -69,8 +69,19 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
+        $this->Application->resetComposer();
 
         putenv("COMPOSER_HOME=" . $this->composerDir);
+    }
+
+    /**
+     * Return the composer application
+     *
+     * @return Application
+     */
+    public function getApplication()
+    {
+        return $this->Application;
     }
 
     /**
@@ -120,23 +131,27 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer require
      *
-     * @param $package - The package name
+     * @param string|array $packages - The package name
      * @param string $version - The package version
      * @param array $options
      *
      * @return array
      */
-    public function requirePackage($package, $version = "", $options = array())
+    public function requirePackage($packages, $version = "", $options = array())
     {
         if (!isset($options['--prefer-dist'])) {
             $options['--prefer-dist'] = true;
         }
 
-        if (!empty($version)) {
-            $package .= ":" . $version;
+        if (!empty($version) && is_string($packages)) {
+            $packages .= ":" . $version;
         }
 
-        $options['tokens'] = array($package);
+        if (!is_array($packages)) {
+            $packages = array($packages);
+        }
+
+        $options['packages'] = $packages;
 
         return $this->executeComposer('require', $options);
     }
@@ -249,6 +264,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     public function dumpAutoload($options = array())
     {
         $this->executeComposer('dump-autoload', $options);
+
         return true;
     }
 
@@ -382,7 +398,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $params = array_merge(array(
             "command"       => $command,
             "--working-dir" => $this->workingDir
-//            '-vvv'          => true
+        ,
+            '-vvv'          => true
         ), $options);
 
         $Input  = new ArrayInput($params);
@@ -399,25 +416,29 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $output         = $Output->getLines();
         $completeOutput = implode("\n", $output);
 
-        // find exeption
-        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+        QUI\Setup\Log\Log::append($completeOutput); // TODO Debug meldung entfernen
+
+        // find exception
+        $throwExceptionType = function ($exceptionType) use ($output) {
             foreach ($output as $key => $line) {
-                if (strpos($line, '[RuntimeException]') === false) {
+                if (strpos($line, $exceptionType) === false) {
                     continue;
                 }
 
                 throw new QUI\Composer\Exception($output[$key + 1]);
             }
+        };
+
+        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+            $throwExceptionType('[RuntimeException]');
+        }
+
+        if (strpos($completeOutput, '[Symfony\Component\Console\Exception\InvalidArgumentException]') !== false) {
+            $throwExceptionType('[Symfony\Component\Console\Exception\InvalidArgumentException]');
         }
 
         if (strpos($completeOutput, '[ErrorException]') !== false) {
-            foreach ($output as $key => $line) {
-                if (strpos($line, '[ErrorException]') === false) {
-                    continue;
-                }
-
-                throw new QUI\Composer\Exception($output[$key + 1]);
-            }
+            $throwExceptionType('[ErrorException]');
         }
 
         return $output;

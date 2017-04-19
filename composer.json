@@ -24,7 +24,7 @@
   ],
   "require": {
     "composer/composer": "^1.1.0",
-    "quiqqer\/utils": "dev-dev"
+    "quiqqer\/utils": ">=1|dev-master|dev-dev"
   },
   "autoload": {
     "psr-4": {

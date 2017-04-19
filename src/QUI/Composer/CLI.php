@@ -116,6 +116,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options - Additional options
      *
      * @return bool - True on success, false on failure
+     *
+     * @throws Exception
      */
     public function install($options = array())
     {
@@ -123,7 +125,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $options['prefer-dist'] = true;
         }
 
-        return $this->runComposer('install', $options);
+        $this->runComposer('install', $options);
+
+        return true;
     }
 
     /**
@@ -132,6 +136,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options - Additional options
      *
      * @return bool
+     *
+     * @throws Exception
      */
     public function update($options = array())
     {
@@ -139,32 +145,37 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $options['prefer-dist'] = true;
         }
 
-        return $this->runComposer('update', $options);
+        $this->runComposer('update', $options);
+
+        return true;
     }
 
     /**
      * Executes the composer require command
      *
-     * @param $package - The package
+     * @param string|array $packages - The package
      * @param string $version - The version of the package
-     *
      * @param array $options
-     * @return array|bool -  Returns the output on success or false on failure
+     * @return bool
+     *
+     * @throws Exception
      */
-    public function requirePackage($package, $version = "", $options = array())
+    public function requirePackage($packages, $version = "", $options = array())
     {
         if (!isset($options['prefer-dist'])) {
             $options['prefer-dist'] = true;
         }
 
         // Build an require string
-        if (!empty($version)) {
-            $package .= ":" . $version;
+        if (!empty($version) && is_string($packages)) {
+            $packages .= ":" . $version;
         }
 
-        $options['packages'] = $package;
+        $options['packages'] = $packages;
 
-        return $this->runComposer('require', $options);
+        $this->runComposer('require', $options);
+
+        return true;
     }
 
     /**
@@ -272,7 +283,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return bool
      */
-    public function updatesAvailable($direct)
+    public function updatesAvailable($direct = false)
     {
         return count($this->outdated($direct)) > 0 ? true : false;
     }
@@ -531,13 +542,16 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param string $cmd - composer command
      * @param array $options - composer options
      * @param $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     * @throws QUI\Composer\Exception
      *
-     * @return array|void
+     * @return array
      */
     protected function runComposer($cmd, $options = array(), $tokens = array())
     {
         if ($this->directOutput) {
-            return $this->systemComposer($cmd, $options, $tokens);
+            $this->systemComposer($cmd, $options, $tokens);
+
+            return array();
         }
 
         return $this->execComposer($cmd, $options, $tokens);
