@@ -69,8 +69,19 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
+        $this->Application->resetComposer();
 
         putenv("COMPOSER_HOME=" . $this->composerDir);
+    }
+
+    /**
+     * Return the composer application
+     *
+     * @return Application
+     */
+    public function getApplication()
+    {
+        return $this->Application;
     }
 
     /**
@@ -253,6 +264,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     public function dumpAutoload($options = array())
     {
         $this->executeComposer('dump-autoload', $options);
+
         return true;
     }
 
@@ -386,7 +398,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $params = array_merge(array(
             "command"       => $command,
             "--working-dir" => $this->workingDir
-//            '-vvv'          => true
+        ,
+            '-vvv'          => true
         ), $options);
 
         $Input  = new ArrayInput($params);
@@ -402,6 +415,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         $output         = $Output->getLines();
         $completeOutput = implode("\n", $output);
+
+        QUI\Setup\Log\Log::append($completeOutput); // TODO Debug meldung entfernen
 
         // find exception
         $throwExceptionType = function ($exceptionType) use ($output) {

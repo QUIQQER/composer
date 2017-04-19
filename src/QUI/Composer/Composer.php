@@ -3,6 +3,7 @@
 /**
  * This files contains QUI\Composer
  */
+
 namespace QUI\Composer;
 
 use QUI;
@@ -94,6 +95,16 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
         } else {
             $this->Runner->unmute();
         }
+    }
+
+    /**
+     * Return the internal composer runner
+     *
+     * @return Interfaces\ComposerInterface
+     */
+    public function getRunner()
+    {
+        return $this->Runner;
     }
 
     /**
