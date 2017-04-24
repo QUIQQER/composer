@@ -102,6 +102,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Performs a composer install
      *
      * @param array $options - additional options
+     *
      * @return array
      */
     public function install($options = array())
@@ -117,6 +118,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Performs a composer update
      *
      * @param array $options - Additional options
+     *
      * @return array
      */
     public function update($options = array())
@@ -132,8 +134,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Performs a composer require
      *
      * @param string|array $packages - The package name
-     * @param string $version - The package version
-     * @param array $options
+     * @param string       $version  - The package version
+     * @param array        $options
      *
      * @return array
      */
@@ -159,7 +161,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer outdated
      *
-     * @param bool $direct - Only direct dependencies
+     * @param bool  $direct - Only direct dependencies
      * @param array $options
      *
      * @return array - Array of package names
@@ -271,7 +273,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Searches the repositories for the given needle
      *
-     * @param $needle
+     * @param       $needle
      * @param array $options
      *
      * @return array - Returns an array in the format : array( packagename => description)
@@ -313,7 +315,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Lists all installed packages
      *
      * @param string $package
-     * @param array $options
+     * @param array  $options
      *
      * @return array - returns an array with all installed packages
      */
@@ -382,7 +384,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Execute the composer
      *
-     * @param $command
+     * @param       $command
      * @param array $options
      *
      * @return array
@@ -415,8 +417,6 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         $output         = $Output->getLines();
         $completeOutput = implode("\n", $output);
-
-        QUI\Setup\Log\Log::append($completeOutput); // TODO Debug meldung entfernen
 
         // find exception
         $throwExceptionType = function ($exceptionType) use ($output) {
