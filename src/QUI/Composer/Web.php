@@ -134,8 +134,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Performs a composer require
      *
      * @param string|array $packages - The package name
-     * @param string       $version  - The package version
-     * @param array        $options
+     * @param string $version - The package version
+     * @param array $options
      *
      * @return array
      */
@@ -161,7 +161,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer outdated
      *
-     * @param bool  $direct - Only direct dependencies
+     * @param bool $direct - Only direct dependencies
      * @param array $options
      *
      * @return array - Array of package names
@@ -293,11 +293,23 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $line = str_replace('Reading ', "\nReading ", $line);
             $line = trim($line);
 
-            if (strpos($line, 'Failed to') === 0) {
+            if (strpos($line, 'Reading ') === 0
+                || strpos($line, 'Failed to') === 0
+                || strpos($line, 'Executing command ') === 0
+                || strpos($line, 'Executing branch ') === 0
+                || strpos($line, 'Importing branch ') === 0
+                || strpos($line, 'Loading config file ') === 0
+                || strpos($line, 'Changed CWD to ') === 0
+                || strpos($line, 'Checked CA file ') === 0
+                || strpos($line, 'Loading plugin ') === 0
+                || strpos($line, 'Running ') === 0
+            ) {
                 continue;
             }
 
-            if (strpos($line, 'Reading ') === 0) {
+            if (strpos($line, 'Writing ') === 0
+                && strpos($line, 'into cache') !== false
+            ) {
                 continue;
             }
 
@@ -315,7 +327,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Lists all installed packages
      *
      * @param string $package
-     * @param array  $options
+     * @param array $options
      *
      * @return array - returns an array with all installed packages
      */
