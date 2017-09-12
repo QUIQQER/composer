@@ -48,10 +48,10 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     public function __construct($workingDir, $composerDir = "")
     {
         // Make sure the workingdir ends on slash
-        $this->workingDir  = rtrim($workingDir, '/') . '/';
-        $this->composerDir = (empty($composerDir)) ? $this->workingDir : rtrim($composerDir, '/') . '/';
+        $this->workingDir  = rtrim($workingDir, '/').'/';
+        $this->composerDir = (empty($composerDir)) ? $this->workingDir : rtrim($composerDir, '/').'/';
 
-        putenv("COMPOSER_HOME=" . $this->composerDir);
+        putenv("COMPOSER_HOME=".$this->composerDir);
 
         if (!is_dir($workingDir)) {
             throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
@@ -85,7 +85,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $this->isFCGI();
-        $this->phpPath = PHP_BINARY . ' ';
+        $this->phpPath = PHP_BINARY.' ';
 
         return $this->phpPath;
     }
@@ -141,7 +141,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function update($options = array())
     {
-        if (!isset($options['prefer-dist'])) {
+        if (!isset($options['prefer-dist'])
+            && !isset($options['prefer-source'])) {
             $options['prefer-dist'] = true;
         }
 
@@ -168,7 +169,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         // Build an require string
         if (!empty($version) && is_string($packages)) {
-            $packages .= ":" . $version;
+            $packages .= ":".$version;
         }
 
         $options['packages'] = $packages;
@@ -411,22 +412,22 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         chdir($this->workingDir);
-        putenv("COMPOSER_HOME=" . $this->composerDir);
+        putenv("COMPOSER_HOME=".$this->composerDir);
 
-        $command = $this->getPHPPath() . ' ' . $this->composerDir . 'composer.phar';
+        $command = $this->getPHPPath().' '.$this->composerDir.'composer.phar';
 
         if ($this->isFCGI()) {
             $command .= ' -d register_argc_argv=1';
         }
 
-        $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
+        $command .= ' --working-dir='.escapeshellarg($this->workingDir);
         $command .= $this->getOptionString($options);
-        $command .= ' ' . escapeshellarg($cmd);
+        $command .= ' '.escapeshellarg($cmd);
 
         // packages list
         if (!empty($packages) && is_array($packages)) {
             foreach ($packages as $package) {
-                $command .= ' ' . escapeshellarg($package);
+                $command .= ' '.escapeshellarg($package);
             }
         }
 
@@ -437,7 +438,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             foreach ($tokens as $token) {
-                $command .= ' ' . escapeshellarg($token);
+                $command .= ' '.escapeshellarg($token);
             }
         }
 
@@ -450,7 +451,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         if ($statusCode != 0) {
             throw new QUI\Composer\Exception(
-                "Execution failed . Errorcode : " . $statusCode . " Last output line : " . $lastLine,
+                "Execution failed . Errorcode : ".$statusCode." Last output line : ".$lastLine,
                 $statusCode
             );
         }
@@ -482,24 +483,24 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
 
         chdir($this->workingDir);
-        putenv("COMPOSER_HOME=" . $this->composerDir);
+        putenv("COMPOSER_HOME=".$this->composerDir);
 
         // Parse output into array and remove empty lines
         $command = $this->getPHPPath();
-        $command .= $this->composerDir . 'composer.phar';
+        $command .= $this->composerDir.'composer.phar';
 
         if ($this->isFCGI()) {
             $command .= ' -d register_argc_argv=1';
         }
 
-        $command .= ' --working-dir=' . escapeshellarg($this->workingDir);
-        $command .= ' ' . escapeshellarg($cmd);
+        $command .= ' --working-dir='.escapeshellarg($this->workingDir);
+        $command .= ' '.escapeshellarg($cmd);
         $command .= $this->getOptionString($options);
 
         // packages list
         if (!empty($packages) && is_array($packages)) {
             foreach ($packages as $package) {
-                $command .= ' ' . escapeshellarg($package);
+                $command .= ' '.escapeshellarg($package);
             }
         }
 
@@ -510,7 +511,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             foreach ($tokens as $token) {
-                $command .= ' ' . escapeshellarg($token);
+                $command .= ' '.escapeshellarg($token);
             }
         }
 
@@ -567,12 +568,12 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $optionString = "";
 
         foreach ($options as $option => $value) {
-            $option = "--" . ltrim($option, "--");
+            $option = "--".ltrim($option, "--");
 
             if ($value === true) {
-                $optionString .= ' ' . escapeshellarg($option);
+                $optionString .= ' '.escapeshellarg($option);
             } else {
-                $optionString .= ' ' . escapeshellarg($option) . "=" . escapeshellarg(trim($value));
+                $optionString .= ' '.escapeshellarg($option)."=".escapeshellarg(trim($value));
             }
         }
 

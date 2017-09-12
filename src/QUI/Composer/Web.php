@@ -51,18 +51,18 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
 
         if (empty($composerDir)) {
-            $this->composerDir = rtrim($workingDir, '/') . '/';
+            $this->composerDir = rtrim($workingDir, '/').'/';
         } else {
-            $this->composerDir = rtrim($composerDir, '/') . '/';
+            $this->composerDir = rtrim($composerDir, '/').'/';
         }
 
-        $this->workingDir = rtrim($workingDir, "/") . '/';
+        $this->workingDir = rtrim($workingDir, "/").'/';
         if (!is_dir($workingDir)) {
             throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
         }
 
 
-        if (!file_exists($this->composerDir . "composer.json")) {
+        if (!file_exists($this->composerDir."composer.json")) {
             throw new QUI\Composer\Exception("Composer.json not found", 404);
         }
 
@@ -71,7 +71,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $this->Application->setAutoExit(false);
         $this->Application->resetComposer();
 
-        putenv("COMPOSER_HOME=" . $this->composerDir);
+        putenv("COMPOSER_HOME=".$this->composerDir);
     }
 
     /**
@@ -123,7 +123,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function update($options = array())
     {
-        if (!isset($options['--prefer-dist'])) {
+        if (!isset($options['--prefer-dist'])
+            && !isset($options['prefer-source'])) {
             $options['--prefer-dist'] = true;
         }
 
@@ -134,8 +135,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Performs a composer require
      *
      * @param string|array $packages - The package name
-     * @param string       $version  - The package version
-     * @param array        $options
+     * @param string $version - The package version
+     * @param array $options
      *
      * @return array
      */
@@ -146,7 +147,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         if (!empty($version) && is_string($packages)) {
-            $packages .= ":" . $version;
+            $packages .= ":".$version;
         }
 
         if (!is_array($packages)) {
@@ -161,7 +162,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer outdated
      *
-     * @param bool  $direct - Only direct dependencies
+     * @param bool $direct - Only direct dependencies
      * @param array $options
      *
      * @return array - Array of package names
@@ -293,11 +294,23 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $line = str_replace('Reading ', "\nReading ", $line);
             $line = trim($line);
 
-            if (strpos($line, 'Failed to') === 0) {
+            if (strpos($line, 'Reading ') === 0
+                || strpos($line, 'Failed to') === 0
+                || strpos($line, 'Executing command ') === 0
+                || strpos($line, 'Executing branch ') === 0
+                || strpos($line, 'Importing branch ') === 0
+                || strpos($line, 'Loading config file ') === 0
+                || strpos($line, 'Changed CWD to ') === 0
+                || strpos($line, 'Checked CA file ') === 0
+                || strpos($line, 'Loading plugin ') === 0
+                || strpos($line, 'Running ') === 0
+            ) {
                 continue;
             }
 
-            if (strpos($line, 'Reading ') === 0) {
+            if (strpos($line, 'Writing ') === 0
+                && strpos($line, 'into cache') !== false
+            ) {
                 continue;
             }
 
@@ -315,7 +328,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Lists all installed packages
      *
      * @param string $package
-     * @param array  $options
+     * @param array $options
      *
      * @return array - returns an array with all installed packages
      */
