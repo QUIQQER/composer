@@ -51,18 +51,18 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
 
         if (empty($composerDir)) {
-            $this->composerDir = rtrim($workingDir, '/') . '/';
+            $this->composerDir = rtrim($workingDir, '/').'/';
         } else {
-            $this->composerDir = rtrim($composerDir, '/') . '/';
+            $this->composerDir = rtrim($composerDir, '/').'/';
         }
 
-        $this->workingDir = rtrim($workingDir, "/") . '/';
+        $this->workingDir = rtrim($workingDir, "/").'/';
         if (!is_dir($workingDir)) {
             throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
         }
 
 
-        if (!file_exists($this->composerDir . "composer.json")) {
+        if (!file_exists($this->composerDir."composer.json")) {
             throw new QUI\Composer\Exception("Composer.json not found", 404);
         }
 
@@ -71,7 +71,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $this->Application->setAutoExit(false);
         $this->Application->resetComposer();
 
-        putenv("COMPOSER_HOME=" . $this->composerDir);
+        putenv("COMPOSER_HOME=".$this->composerDir);
     }
 
     /**
@@ -123,7 +123,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function update($options = array())
     {
-        if (!isset($options['--prefer-dist'])) {
+        if (!isset($options['--prefer-dist'])
+            && !isset($options['prefer-source'])) {
             $options['--prefer-dist'] = true;
         }
 
@@ -146,7 +147,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         if (!empty($version) && is_string($packages)) {
-            $packages .= ":" . $version;
+            $packages .= ":".$version;
         }
 
         if (!is_array($packages)) {
