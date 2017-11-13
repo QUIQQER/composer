@@ -142,7 +142,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function requirePackage($packages, $version = "", $options = array())
     {
-        if (!isset($options['--prefer-dist'])) {
+        if (!isset($options['prefer-dist'])
+            && !isset($options['prefer-source'])) {
             $options['--prefer-dist'] = true;
         }
 
@@ -412,10 +413,10 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         $params = array_merge(array(
             "command"       => $command,
-            "--working-dir" => $this->workingDir
-        ,
+            "--working-dir" => $this->workingDir,
             '-vvv'          => true
         ), $options);
+
 
         $Input  = new ArrayInput($params);
         $Output = new ArrayOutput();
