@@ -163,10 +163,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function requirePackage($packages, $version = "", $options = array())
     {
-        echo "beforde" . PHP_EOL;
-        print_r($options);
 
-        echo "after:" . PHP_EOL;
         if (!isset($options['prefer-dist'])
             && !isset($options['prefer-source'])) {
             $options['prefer-dist'] = true;
@@ -178,8 +175,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $options['packages'] = $packages;
-
-        print_r($options);
 
         $this->runComposer('require', $options);
 
@@ -521,21 +516,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $command .= ' 2>&1';
 
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo $command . PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
-        echo PHP_EOL;
 
         exec($command, $output, $statusCode);
 
