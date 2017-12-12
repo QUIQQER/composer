@@ -258,4 +258,17 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
 
         return $this->Runner->unmute();
     }
+
+    /**
+     * Executes the composer why command.
+     * This commands displays why the package has been installed and which packages require it.
+     *
+     * @param $package
+     *
+     * @return array
+     */
+    public function why($package)
+    {
+        return $this->Runner->why($package);
+    }
 }

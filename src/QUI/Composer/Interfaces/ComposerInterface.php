@@ -123,4 +123,14 @@ interface ComposerInterface
      * @throws \QUI\Composer\Exception
      */
     public function getOutdatedPackages();
+
+    /**
+     * Executes the composer why command.
+     * This commands displays why the package has been installed and which packages require it.
+     * 
+     * @param $package
+     *
+     * @return array
+     */
+    public function why($package);
 }

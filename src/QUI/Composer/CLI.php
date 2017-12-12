@@ -48,7 +48,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     public function __construct($workingDir, $composerDir = "")
     {
         // Make sure the workingdir ends on slash
-        $this->workingDir  = rtrim($workingDir, '/').'/';
+        $this->workingDir = rtrim($workingDir, '/').'/';
         $this->composerDir = (empty($composerDir)) ? $this->workingDir : rtrim($composerDir, '/').'/';
 
         putenv("COMPOSER_HOME=".$this->composerDir);
@@ -79,7 +79,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         if (!defined('PHP_BINARY')) {
             $this->phpPath = 'php ';
-            $this->isFCGI  = false;
+            $this->isFCGI = false;
 
             return $this->phpPath;
         }
@@ -157,6 +157,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param string|array $packages - The package
      * @param string $version - The version of the package
      * @param array $options
+     *
      * @return bool
      *
      * @throws Exception
@@ -185,6 +186,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param bool $direct - Check only direct dependencies
      *
      * @param array $options
+     *
      * @return array - Returns false on failure and an array of packagenames on success
      *
      * @throws QUI\Composer\Exception
@@ -197,7 +199,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $output = $this->execComposer('outdated', $options);
 
-        $packages       = array();
+        $packages = array();
         $completeOutput = implode("\n", $output);
 
         // find exeption
@@ -248,7 +250,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
             $line = explode(' to ', $line);
 
-
             // old version
             $firstSpace = strpos($line[0], ' ');
             $oldVersion = trim(substr($line[0], $firstSpace), '() ');
@@ -256,23 +257,22 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             // new version
             $firstSpace = strpos($line[1], ' ');
             $newVersion = trim(substr($line[1], $firstSpace), '() ');
-            $package    = trim(substr($line[1], 0, $firstSpace));
+            $package = trim(substr($line[1], 0, $firstSpace));
 
             if (strpos($oldVersion, 'Reading ') !== false) {
                 $packageStart = strpos($line[0], $package);
-                $line[0]      = substr($line[0], $packageStart);
+                $line[0] = substr($line[0], $packageStart);
 
                 $firstSpace = strpos($line[0], ' ');
                 $oldVersion = trim(substr($line[0], $firstSpace), '() ');
             }
 
             $result[] = array(
-                'package'    => $package,
-                'version'    => $newVersion,
+                'package' => $package,
+                'version' => $newVersion,
                 'oldVersion' => $oldVersion
             );
         }
-
 
         return $result;
     }
@@ -293,6 +293,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Generates the autoloader files again without downloading anything
      *
      * @param array $options
+     *
      * @return bool - true on success
      */
     public function dumpAutoload($options = array())
@@ -311,11 +312,12 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string|array $needle
      * @param array $options
+     *
      * @return array - Returns an array in the format : array( packagename => description)
      */
     public function search($needle, $options = array())
     {
-        $output   = $this->execComposer('search', $options, $needle);
+        $output = $this->execComposer('search', $options, $needle);
         $packages = array();
 
         foreach ($output as $line) {
@@ -348,17 +350,18 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string $package
      * @param array $options
+     *
      * @return array - returns an array with all installed packages
      */
     public function show($package = "", $options = array())
     {
-        $output   = $this->execComposer('show', $options);
-        $regex    = "~ +~";
+        $output = $this->execComposer('show', $options);
+        $regex = "~ +~";
         $packages = array();
 
         foreach ($output as $line) {
             // Replace all spaces (multiple or single) by a single space
-            $line  = preg_replace($regex, " ", $line);
+            $line = preg_replace($regex, " ", $line);
             $words = explode(" ", $line);
 
             if ($words[0] != ""
@@ -387,6 +390,61 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         return true;
+    }
+
+    /**
+     * Executes the composer why command.
+     * This commands displays why the package has been installed and which packages require it.
+     * Returnformat:
+     * ```
+     * array(
+     * 0 => array(
+     *          "package" => "vendor/package",
+     *          "version" => "2.1.2",
+     *          "constraint" => ^4.2 | 5.0.*
+     *      );
+     * )
+     * ```
+     * @param $package
+     * @throws Exception
+     * @return array
+     */
+    public function why($package)
+    {
+        $options['packages'] = array($package);
+
+        $output =  $this->execComposer('why', $options);
+        foreach ($output as $line) {
+            if (strpos($line, 'You') !== false) {
+                continue;
+            }
+
+            if (strpos($line, 'Reading') === 0) {
+                continue;
+            }
+
+            if (strpos($line, 'Failed') === 0) {
+                continue;
+            }
+
+            if (strpos($line, 'Importing') === 0) {
+                continue;
+            }
+
+            preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches);
+
+            if (!isset($matches[1]) || !isset($matches[1]) || !isset($matches[1])) {
+                continue;
+            }
+
+            $result[] = array(
+                "package" => $matches[1],
+                "version" => $matches[2],
+                "constraint" => $matches[5],
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -447,7 +505,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 //        QUI\System\Log::writeRecursive('system: ' . $command);
 
         $statusCode = 0;
-        $lastLine   = system($command, $statusCode);
+        $lastLine = system($command, $statusCode);
 
         if ($statusCode != 0) {
             throw new QUI\Composer\Exception(
@@ -480,7 +538,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         if (is_string($packages)) {
             $packages = array($packages);
         }
-
 
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=".$this->composerDir);
@@ -543,6 +600,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param string $cmd - composer command
      * @param array $options - composer options
      * @param $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     *
      * @throws QUI\Composer\Exception
      *
      * @return array
@@ -560,7 +618,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Returns a properly formatted string of the given option array
+     *
      * @param array $options
+     *
      * @return string
      */
     protected function getOptionString($options)
@@ -607,4 +667,5 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         return $this->isFCGI;
     }
+
 }

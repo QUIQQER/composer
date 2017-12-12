@@ -40,7 +40,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     {
         // we must set argv params for composer
         $_SERVER['argv'][0] = pathinfo(__FILE__, \PATHINFO_BASENAME);
-        $_SERVER['argc']    = 1;
+        $_SERVER['argc'] = 1;
 
         // we need that for hirak/prestissimo
         $GLOBALS['argv'] = $_SERVER['argv'];
@@ -48,7 +48,6 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         if (!defined('STDIN')) {
             define('STDIN', fopen("php://stdin", "r"));
         }
-
 
         if (empty($composerDir)) {
             $this->composerDir = rtrim($workingDir, '/').'/';
@@ -61,11 +60,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
         }
 
-
         if (!file_exists($this->composerDir."composer.json")) {
             throw new QUI\Composer\Exception("Composer.json not found", 404);
         }
-
 
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
@@ -160,36 +157,6 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
-     * Performs a composer outdated
-     *
-     * @param bool $direct - Only direct dependencies
-     * @param array $options
-     *
-     * @return array - Array of package names
-     *
-     * @throws QUI\Composer\Exception
-     */
-    public function outdated($direct = false, $options = array())
-    {
-        $result = $this->executeComposer('show', array(
-            '--outdated' => true
-        ));
-
-        $packages = array();
-
-        // find exeption
-        foreach ($result as $line) {
-            $package = QUI\Composer\Utils\Parser::parsePackageLineToArray($line);
-
-            if (!empty($package)) {
-                $packages[] = $package;
-            }
-        }
-
-        return $packages;
-    }
-
-    /**
      * Checks if packages can be updated
      *
      * @param bool $direct - Only direct dependencies
@@ -208,12 +175,69 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * Performs a composer outdated
+     *
+     * @param bool $direct - Only direct dependencies
+     * @param array $options
+     *
+     * @return array - Array of package names
+     *
+     * @throws QUI\Composer\Exception
+     */
+    public function outdated($direct = false, $options = array())
+    {
+        $result = $this->executeComposer('show', array(
+            '--outdated' => true,
+            '--format' => 'json'
+        ));
+
+        $packages = array();
+        $outdated = array();
+        // look for the packages within the composer outpu
+        foreach ($result as $line) {
+
+            if (strpos($line, '<warning>You') !== false) {
+                continue;
+            }
+
+            if (strpos($line, 'Reading') === 0) {
+                continue;
+            }
+
+            if (strpos($line, 'Failed') === 0) {
+                continue;
+            }
+
+            if (strpos($line, 'Importing') === 0) {
+                continue;
+            }
+
+            $outdated = json_decode($line, true)['installed'];
+            break;
+        }
+
+        if (empty($outdated)) {
+            return array();
+        }
+
+        foreach ($outdated as $package) {
+            $packages[] = array(
+                "package" => $package['name'],
+                "version" => $package['version'],
+            );
+        }
+
+        return $packages;
+    }
+
+    /**
      * Return all outdated packages
      *
      * @return array
      */
     public function getOutdatedPackages()
     {
+        $result = array();
         $output = $this->executeComposer('update', array(
             '--dry-run' => true
         ));
@@ -237,19 +261,19 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             // new version
             $firstSpace = strpos($line[1], ' ');
             $newVersion = trim(substr($line[1], $firstSpace), '() ');
-            $package    = trim(substr($line[1], 0, $firstSpace));
+            $package = trim(substr($line[1], 0, $firstSpace));
 
             if (strpos($oldVersion, 'Reading ') !== false) {
                 $packageStart = strpos($line[0], $package);
-                $line[0]      = substr($line[0], $packageStart);
+                $line[0] = substr($line[0], $packageStart);
 
                 $firstSpace = strpos($line[0], ' ');
                 $oldVersion = trim(substr($line[0], $firstSpace), '() ');
             }
 
             $result[] = array(
-                'package'    => $package,
-                'version'    => $newVersion,
+                'package' => $package,
+                'version' => $newVersion,
                 'oldVersion' => $oldVersion
             );
         }
@@ -338,13 +362,13 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $options["tokens"] = array($package);
         }
 
-        $result   = $this->executeComposer('show', $options);
-        $regex    = "~ +~";
+        $result = $this->executeComposer('show', $options);
+        $regex = "~ +~";
         $packages = array();
 
         foreach ($result as $line) {
             // Replace all spaces (multiple or single) by a single space
-            $line  = preg_replace($regex, " ", $line);
+            $line = preg_replace($regex, " ", $line);
             $words = explode(" ", $line);
 
             if ($words[0] != ""
@@ -371,13 +395,13 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         chdir($this->workingDir);
 
         $params = array(
-            "command"       => "clear-cache",
+            "command" => "clear-cache",
             "--working-dir" => $this->workingDir
         );
 
         $params = array_merge($params);
 
-        $Input  = new ArrayInput($params);
+        $Input = new ArrayInput($params);
         $Output = new ArrayOutput();
 
         $this->Application->run($Input, $Output);
@@ -385,6 +409,62 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         return true;
     }
 
+    /**
+     * Executes the composer why command.
+     * This commands displays why the package has been installed and which packages require it.
+     * Returnformat:
+     * ```
+     * array(
+     * 0 => array(
+     *          "package" => "vendor/package",
+     *          "version" => "2.1.2",
+     *          "constraint" => ^4.2 | 5.0.*
+     *      );
+     * )
+     * ```
+     * @param $package
+     * @throws Exception
+     * @return array
+     */
+    public function why($package)
+    {
+        $options['package'] = $package;
+        $result = array();
+        
+        $output = $this->executeComposer('why', $options);
+        foreach($output as $line){
+            if (strpos($line, '<warning>You') !== false) {
+                continue;
+            }
+
+            if (strpos($line, 'Reading') === 0) {
+                continue;
+            }
+
+            if (strpos($line, 'Failed') === 0) {
+                continue;
+            }
+
+            if (strpos($line, 'Importing') === 0) {
+                continue;
+            }
+            
+            preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~",$line,$matches);
+            
+            if(!isset($matches[1]) || !isset($matches[1]) || !isset($matches[1])){
+                continue;
+            }
+            
+            $result[] = array(
+                "package" => $matches[1],
+                "version" => $matches[2],
+                "constraint" => $matches[5],
+            );
+        }
+        
+        return $result;
+    }
+    
     /**
      * Resets composer to avoid caching issues.
      */
@@ -411,13 +491,11 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         chdir($this->workingDir);
 
         $params = array_merge(array(
-            "command"       => $command,
+            "command" => $command,
             "--working-dir" => $this->workingDir
-        ,
-            '-vvv'          => true
         ), $options);
 
-        $Input  = new ArrayInput($params);
+        $Input = new ArrayInput($params);
         $Output = new ArrayOutput();
 
         ob_start();
@@ -428,7 +506,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             ob_end_clean();
         }
 
-        $output         = $Output->getLines();
+        $output = $Output->getLines();
         $completeOutput = implode("\n", $output);
 
         // find exception
@@ -456,4 +534,6 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         return $output;
     }
+
+    
 }
