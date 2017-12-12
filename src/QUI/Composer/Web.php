@@ -139,7 +139,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function requirePackage($packages, $version = "", $options = array())
     {
-        if (!isset($options['--prefer-dist'])) {
+        if (!isset($options['prefer-dist'])
+            && !isset($options['prefer-source'])) {
             $options['--prefer-dist'] = true;
         }
 
@@ -422,7 +423,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *      );
      * )
      * ```
+     *
      * @param $package
+     *
      * @throws Exception
      * @return array
      */
@@ -430,9 +433,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     {
         $options['package'] = $package;
         $result = array();
-        
+
         $output = $this->executeComposer('why', $options);
-        foreach($output as $line){
+        foreach ($output as $line) {
             if (strpos($line, '<warning>You') !== false) {
                 continue;
             }
@@ -448,23 +451,23 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             if (strpos($line, 'Importing') === 0) {
                 continue;
             }
-            
-            preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~",$line,$matches);
-            
-            if(!isset($matches[1]) || !isset($matches[1]) || !isset($matches[1])){
+
+            preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches);
+
+            if (!isset($matches[1]) || !isset($matches[1]) || !isset($matches[1])) {
                 continue;
             }
-            
+
             $result[] = array(
                 "package" => $matches[1],
                 "version" => $matches[2],
                 "constraint" => $matches[5],
             );
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Resets composer to avoid caching issues.
      */
@@ -491,11 +494,13 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         chdir($this->workingDir);
 
         $params = array_merge(array(
+
             "command" => $command,
             "--working-dir" => $this->workingDir
         ), $options);
 
         $Input = new ArrayInput($params);
+
         $Output = new ArrayOutput();
 
         ob_start();
@@ -535,5 +540,4 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         return $output;
     }
 
-    
 }
