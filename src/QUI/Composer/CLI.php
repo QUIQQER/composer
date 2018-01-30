@@ -178,9 +178,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $options['packages'] = $packages;
 
-        $this->runComposer('require', $options);
-
-        return true;
+        
+        return $this->runComposer('require', $options);
     }
 
     /**
@@ -669,5 +668,4 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         return $this->isFCGI;
     }
-
 }
