@@ -1,33 +1,44 @@
-composer
-========
+![Readme.jpg](bin/images/Readme.jpg)
 
-Composer API für Quiqqer
+Other languages
+---------------
+* [Deutsch/German](README_de.md)
 
-Paketname:
+QUIQQER - Composer
+==================
 
+Composer API for QUIQQER
+
+Packagename:
+```
     quiqqer/composer
+```
 
-
-Features (Funktionen)
+Features
 --------
-Zugriff auf Composer über PHP
+* Access composer with PHP
+* Allows usage of QUIQQERs Lockserver
+* Optimize Composer for usage with QUIQQER
 
 Installation
 ------------
 
-Der Paketname ist: quiqqer/composer
+```bash
+composer require quiqqer/composer 
+```
 
-Benutzung
----------
+Usage
+-----
 
-QUI\Composer\Composer dient als Schnittstelle zu Composer.  
-Die Klasse instantiert automatisch eine dem System angepasste Composerinstanz gemäß des Composer Interfaces.  
+`QUI\Composer\Composer`  serves as central accessor for 
+a customized Composer instance, which is optimized for usage with QUIQQER.
 
-    $Composer = new Composer('/path/to/your/composerjson/directory/');
-    $Composer->update();
+```php
+$Composer = new Composer('/path/to/your/composerjson/directory/');
+$Composer->update();
+```
 
-
-Mitwirken
+Contribute
 ----------
 
 - Issue Tracker: https://dev.quiqqer.com/quiqqer/composer/issues
@@ -37,7 +48,7 @@ Mitwirken
 Support
 -------
 
-Falls Sie einen Fehler gefunden haben oder Verbesserungen wünschen,
-senden Sie bitte eine E-Mail an support@pcsg.de.
+Feel free to send us an email, if you encountered an error,want to provide feedback or suggest an idea.
+Our E-Mail is: support@pcsg.de
 
 

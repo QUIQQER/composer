@@ -9,5 +9,22 @@
         </description>
 
         <image src="URL_OPT_DIR/quiqqer/composer/bin/package.png"/>
+
+        <support>
+            <email><![CDATA[support@pcsg.de]]></email>
+            <forum><![CDATA[https://community.quiqqer.com]]></forum>
+            <source><![CDATA[https://dev.quiqqer.com/quiqqer/composer]]></source>
+            <issues><![CDATA[https://dev.quiqqer.com/quiqqer/composer/issues]]></issues>
+            <wiki><![CDATA[https://dev.quiqqer.com/quiqqer/composer/wikis/home]]></wiki>
+        </support>
+
+        <allowedPaths>
+            <path><![CDATA[URL_OPT_DIR/ckeditor/ckeditor/]]></path>
+        </allowedPaths>
+
+        <copyright>
+            <name><![CDATA[PCSG - Computer & Internet Service OHG]]></name>
+            <license><![CDATA[GPL-3.0+]]></license>
+        </copyright>
     </package>
 </quiqqer>

@@ -6,8 +6,12 @@
             <en><![CDATA[QUIQQER - Composer]]></en>
         </locale>
         <locale name="package.description">
-            <de><![CDATA[QUIQQER - Composer Schnittstelle]]></de>
-            <en><![CDATA[QUIQQER - Composer API Bridge]]></en>
+            <de>
+                <![CDATA[Dieses Paket erweitert QUIQQER um eine Composer Schnittstelle, um Paketinstallationen und Updates direkt in der Oberfläche auszuführen. ]]>
+            </de>
+            <en>
+                <![CDATA[This package extends QUIQQER by a composer API to allow the user to install packages or update QUIQQER directly in the webinterface.]]>
+            </en>
         </locale>
     </groups>
 </locales>
