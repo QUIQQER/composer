@@ -1,35 +1,36 @@
 {
-    "name": "quiqqer\/composer",
+  "name": "quiqqer\/composer",
   "type": "quiqqer-plugin",
   "description": "Composer API for the QUIQQER Framework",
-    "version": "dev-master",
-    "license": "GPL-3.0+",
-    "authors": [
-        {
-            "name": "Florian Bogner",
-            "email": "f.bogner@pcsg.de",
-            "homepage": "http:\/\/www.pcsg.de",
-            "role": "Developer"
-        }
-    ],
-    "support": {
-        "email": "support@pcsg.de",
-        "url": "http:\/\/www.pcsg.de"
-    },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https:\/\/update.quiqqer.com\/"
-        }
-    ],
-    "require": {
-        "composer\/composer": "^1.1.0",
-        "quiqqer\/utils": ">=1|dev-master|dev-dev"
-    },
-    "autoload": {
-        "psr-4": {
-            "QUI\\Composer\\": "src\/QUI\/Composer",
-            "QUI\\Composer\\Interfaces\\": "src\/QUI\/Composer\/Interfaces"
-        }
+  "version": "dev-dev",
+  "license": "GPL-3.0+",
+  "authors": [
+    {
+      "name": "Florian Bogner",
+      "email": "f.bogner@pcsg.de",
+      "homepage": "http:\/\/www.pcsg.de",
+      "role": "Developer"
     }
+  ],
+  "support": {
+    "email": "support@pcsg.de",
+    "url": "http:\/\/www.pcsg.de"
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https:\/\/update.quiqqer.com\/"
+    }
+  ],
+  "require": {
+    "composer\/composer": "^1.1.0",
+    "symfony/process": "^4.2",
+    "quiqqer\/utils": ">=1|dev-master|dev-dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "QUI\\Composer\\": "src\/QUI\/Composer",
+      "QUI\\Composer\\Interfaces\\": "src\/QUI\/Composer\/Interfaces"
+    }
+  }
 }

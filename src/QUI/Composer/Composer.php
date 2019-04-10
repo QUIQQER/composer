@@ -51,6 +51,11 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     protected $composerDir;
 
     /**
+     * @var Utils\Events
+     */
+    protected $Events;
+
+    /**
      * Composer constructor.
      * Can be used as general accespoint to composer.
      * Will use CLI composer if shell_exec is available
@@ -60,8 +65,9 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function __construct($workingDir, $composerDir = "")
     {
-        $this->workingDir = $workingDir;
+        $this->workingDir  = $workingDir;
         $this->composerDir = $composerDir;
+        $this->Events      = new QUI\Composer\Utils\Events();
 
         if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
             $this->setMode(self::MODE_CLI);
@@ -78,17 +84,23 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function setMode($mode)
     {
+        $self = $this;
+
         switch ($mode) {
             case self::MODE_CLI:
                 $this->Runner = new CLI($this->workingDir, $this->composerDir);
-                $this->mode = self::MODE_CLI;
+                $this->mode   = self::MODE_CLI;
                 break;
 
             case self::MODE_WEB:
                 $this->Runner = new Web($this->workingDir, $this->composerDir);
-                $this->mode = self::MODE_WEB;
+                $this->mode   = self::MODE_WEB;
                 break;
         }
+
+        $this->Runner->addEvent('onOutput', function ($Runner, $output, $type) use ($self) {
+            $self->Events->fireEvent('output', [$self, $output, $type]);
+        });
 
         if ($this->mute()) {
             $this->Runner->mute();
@@ -114,7 +126,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return string
      */
-    public function update($options = array())
+    public function update($options = [])
     {
         return $this->Runner->update($options);
     }
@@ -126,7 +138,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return string
      */
-    public function install($options = array())
+    public function install($options = [])
     {
         return $this->Runner->install($options);
     }
@@ -140,7 +152,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return string
      */
-    public function requirePackage($packages, $version = "", $options = array())
+    public function requirePackage($packages, $version = "", $options = [])
     {
         return $this->Runner->requirePackage($packages, $version, $options);
     }
@@ -153,7 +165,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array|string
      */
-    public function outdated($direct = false, $options = array())
+    public function outdated($direct = false, $options = [])
     {
         return $this->Runner->outdated($direct, $options);
     }
@@ -198,7 +210,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return bool - true on success
      */
-    public function dumpAutoload($options = array())
+    public function dumpAutoload($options = [])
     {
         return $this->Runner->dumpAutoload($options);
     }
@@ -211,7 +223,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array - Returns an array in the format : array( packagename => description)
      */
-    public function search($needle, $options = array())
+    public function search($needle, $options = [])
     {
         return $this->Runner->search($needle, $options);
     }
@@ -224,7 +236,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array - returns an array with all installed packages
      */
-    public function show($package = "", $options = array())
+    public function show($package = "", $options = [])
     {
         return $this->Runner->show($package, $options);
     }
@@ -271,4 +283,20 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     {
         return $this->Runner->why($package);
     }
+
+    //region events
+
+    /**
+     * Add an event
+     *
+     * @param string $event - The type of event (e.g. 'output').
+     * @param callable $fn - The function to execute.
+     * @param int $priority - optional, Priority of the event
+     */
+    public function addEvent($event, $fn, $priority = 0)
+    {
+        $this->Events->addEvent($event, $fn, $priority);
+    }
+
+    //endregion
 }
