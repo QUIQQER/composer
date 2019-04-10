@@ -24,7 +24,7 @@
   ],
   "require": {
     "composer\/composer": "^1.1.0",
-    "symfony/process": "^4.2",
+    "symfony/process": "*",
     "quiqqer\/utils": ">=1|dev-master|dev-dev"
   },
   "autoload": {
