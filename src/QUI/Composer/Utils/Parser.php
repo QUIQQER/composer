@@ -3,6 +3,7 @@
 /**
  * This file contains QUI\Composer\Utils\Parser
  */
+
 namespace QUI\Composer\Utils;
 
 /**
@@ -22,39 +23,39 @@ class Parser
     public static function parsePackageLineToArray($string)
     {
         if (empty($string)) {
-            return array();
+            return [];
         }
 
-        $string = str_replace("\010", '', $string); // remove backspace
-        $string = trim($string);
+        $string = \str_replace("\010", '', $string); // remove backspace
+        $string = \trim($string);
 
-        if (strpos($string, '<warning>You') !== false) {
-            return array();
+        if (\strpos($string, '<warning>You') !== false) {
+            return [];
         }
 
-        if (strpos($string, 'Reading') === 0) {
-            return array();
+        if (\strpos($string, 'Reading') === 0) {
+            return [];
         }
 
-        if (strpos($string, 'Failed') === 0) {
-            return array();
+        if (\strpos($string, 'Failed') === 0) {
+            return [];
         }
 
-        if (strpos($string, 'Importing') === 0) {
-            return array();
+        if (\strpos($string, 'Importing') === 0) {
+            return [];
         }
 
-        $result = array();
+        $result = [];
 
         // new version
-        $spacePos    = strpos($string, ' ');
-        $versionTemp = trim(substr($string, $spacePos));
-        $spaceNext   = strpos($versionTemp, ' ');
+        $spacePos    = \strpos($string, ' ');
+        $versionTemp = \trim(\substr($string, $spacePos));
+        $spaceNext   = \strpos($versionTemp, ' ');
 
-        $result['package'] = trim(substr($string, 0, $spacePos));
+        $result['package'] = \trim(\substr($string, 0, $spacePos));
 
-        $result['version'] = trim(substr($versionTemp, 0, $spaceNext));
-        $result['version'] = ltrim($result['version'], 'v');
+        $result['version'] = \trim(\substr($versionTemp, 0, $spaceNext));
+        $result['version'] = \ltrim($result['version'], 'v');
 
         return $result;
     }

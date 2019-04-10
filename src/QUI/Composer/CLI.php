@@ -62,7 +62,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         \putenv("COMPOSER_HOME=".$this->composerDir);
 
-        if (!is_dir($workingDir)) {
+        if (!\is_dir($workingDir)) {
             throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
         }
     }
