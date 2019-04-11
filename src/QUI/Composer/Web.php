@@ -4,6 +4,7 @@ namespace QUI\Composer;
 
 use QUI;
 use Composer\Console\Application;
+use QUI\Composer\Utils\Events;
 use Symfony\Component\Console\Input\ArrayInput;
 
 /**
@@ -27,6 +28,11 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @var string
      */
     protected $composerDir;
+
+    /**
+     * @var Utils\Events
+     */
+    protected $Events;
 
     /**
      * (Composer) Web constructor.
@@ -55,6 +61,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $this->composerDir = \rtrim($composerDir, '/').'/';
         }
 
+        $this->Events     = new QUI\Composer\Utils\Events();
         $this->workingDir = \rtrim($workingDir, "/").'/';
 
         if (!\is_dir($workingDir)) {
@@ -536,4 +543,20 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         return $output;
     }
+
+    //region events
+
+    /**
+     * Add an event
+     *
+     * @param string $event - The type of event (e.g. 'output').
+     * @param callable $fn - The function to execute.
+     * @param int $priority - optional, Priority of the event
+     */
+    public function addEvent($event, $fn, $priority = 0)
+    {
+        $this->Events->addEvent($event, $fn, $priority);
+    }
+
+    //endregion
 }
