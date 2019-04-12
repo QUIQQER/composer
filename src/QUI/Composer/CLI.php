@@ -383,7 +383,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     public function clearCache()
     {
         try {
-            $this->execComposer('dump-autoload');
+            $this->execComposer('clear-cache');
         } catch (Exception $Exception) {
             return false;
         }
