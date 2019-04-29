@@ -504,8 +504,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         if ($result['successful'] === false) {
             throw new QUI\Composer\Exception(
-                "Execution failed . Errorcode : ".$statusCode." Last output line : ".$lastLine,
-                $statusCode
+                "Execution failed.\n\nLast output:\n\n".$result['output']
             );
         }
     }
