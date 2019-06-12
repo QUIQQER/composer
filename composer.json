@@ -2,7 +2,7 @@
   "name": "quiqqer\/composer",
   "type": "quiqqer-plugin",
   "description": "Composer API for the QUIQQER Framework",
-  "version": "dev-dev",
+  "version": "1.5.1",
   "license": "GPL-3.0+",
   "authors": [
     {
