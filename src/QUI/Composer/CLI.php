@@ -588,18 +588,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
         }
 
-        if ($cmd === 'dump-autoload') {
-            $output = shell_exec($command);
-
-            try {
-                $this->Events->fireEvent('output', [$this, $output, '']);
-            } catch (QUI\Exception $Exception) {
-                $output = $Exception->getMessage();
-            }
-        } else {
-            $result = $this->runProcess($command);
-            $output = $result['output'];
-        }
+        $result = $this->runProcess($command);
+        $output = $result['output'];
 
         // find exception
         if (\strpos($output, '[RuntimeException]') !== false) {
