@@ -120,6 +120,14 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * @return array
+     */
+    public function getVersions()
+    {
+        return $this->Runner->getVersions();
+    }
+
+    /**
      * Executes composers update command
      *
      * @param array $options
