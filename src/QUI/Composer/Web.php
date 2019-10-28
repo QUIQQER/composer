@@ -104,6 +104,37 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * Return all installed packages with its current versions
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function getVersions()
+    {
+        $packages = $this->executeComposer('show', [
+            '--installed' => true
+        ]);
+
+        $result = [];
+
+        foreach ($packages as $package) {
+            if (\strpos($package, '<warning>') === 0) {
+                continue;
+            }
+
+            $package = \preg_replace('#([ ]){2,}#', "$1", $package);
+            $package = \explode(' ', $package);
+
+            $name    = $package[0];
+            $version = $package[1];
+
+            $result[$name] = $version;
+        }
+
+        return $result;
+    }
+
+    /**
      * Performs a composer install
      *
      * @param array $options - additional options
