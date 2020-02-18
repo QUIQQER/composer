@@ -530,14 +530,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $command .= ' -d register_argc_argv=1';
         }
 
-        $command .= ' --working-dir='.\escapeshellarg($this->workingDir);
+        $command .= ' --working-dir='.$this->workingDir;
         $command .= $this->getOptionString($options);
-        $command .= ' '.\escapeshellarg($cmd);
+        $command .= ' '.$cmd;
 
         // packages list
         if (!empty($packages) && \is_array($packages)) {
             foreach ($packages as $package) {
-                $command .= ' '.\escapeshellarg($package);
+                $command .= ' '.$package;
             }
         }
 
@@ -548,7 +548,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             foreach ($tokens as $token) {
-                $command .= ' '.\escapeshellarg($token);
+                $command .= ' '.$token;
             }
         }
 
@@ -597,14 +597,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $command .= ' -d register_argc_argv=1';
         }
 
-        $command .= ' --working-dir='.\escapeshellarg($this->workingDir);
-        $command .= ' '.\escapeshellarg($cmd);
+        $command .= ' --working-dir='.$this->workingDir;
+        $command .= ' '.$cmd;
         $command .= $this->getOptionString($options);
 
         // packages list
         if (!empty($packages) && \is_array($packages)) {
             foreach ($packages as $package) {
-                $command .= ' '.\escapeshellarg($package);
+                $command .= ' '.$package;
             }
         }
 
@@ -615,7 +615,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             foreach ($tokens as $token) {
-                $command .= ' '.\escapeshellarg($token);
+                $command .= ' '.$token;
             }
         }
 
@@ -720,10 +720,16 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     protected function runProcess($cmd)
     {
-        $self    = $this;
-        $output  = '';
-        $Process = new Process([$cmd]);
-        
+        $self   = $this;
+        $output = '';
+
+        $cmd = \str_replace("'", '', $cmd);
+        $cmd = \str_replace("`", '', $cmd);
+
+        $cmd = \explode(' ', $cmd);
+        $cmd = \array_filter($cmd);
+
+        $Process = new Process($cmd);
         $Process->setTimeout(0);
 
         $Process->run(function ($type, $data) use ($self, &$output) {
