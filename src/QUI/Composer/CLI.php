@@ -722,8 +722,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     {
         $self    = $this;
         $output  = '';
-        $Process = new Process($cmd);
-
+        $Process = new Process([$cmd]);
+        
         $Process->setTimeout(0);
 
         $Process->run(function ($type, $data) use ($self, &$output) {
