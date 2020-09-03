@@ -732,6 +732,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $Process = new Process($cmd);
         $Process->setTimeout(0);
 
+        // TTY-mode is required for colored output.
+        // Ignore the warning that 'isTtySupported' is unknown.
+        // Your IDE may just be confused and look inside the 'quiqqer/composer'-package's 'composer.phar'.
+        // The 'composer.phar' there is outdated and does not contain that method.
+        // More information and a discussion can be found here: https://dev.quiqqer.com/quiqqer/quiqqer/-/issues/1029
+        $Process->setTty($Process::isTtySupported());
+
         $Process->run(function ($type, $data) use ($self, &$output) {
             $output .= $data;
             $self->Events->fireEvent('output', [$self, $data, $type]);
