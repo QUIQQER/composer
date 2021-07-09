@@ -22,7 +22,7 @@
         }
     ],
     "require": {
-        "composer\/composer": "^1.9.0",
+        "composer\/composer": "1.9.*|2.*",
         "symfony\/process": "*",
         "quiqqer\/utils": ">=1|dev-master|dev-dev"
     },
