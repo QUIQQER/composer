@@ -17,50 +17,47 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * @var string
      */
-    protected $workingDir;
+    protected string $workingDir;
 
     /**
      * @var string
      */
-    protected $composerDir;
+    protected string $composerDir;
 
     /**
      * @var string
      */
-    protected $phpPath = null;
+    protected ?string $phpPath = null;
 
     /**
      * @var bool
      */
-    protected $isFCGI = null;
+    protected ?bool $isFCGI = null;
 
     /**
      * @var bool
      */
-    protected $directOutput = true;
+    protected bool $directOutput = true;
 
     /**
      * @var Utils\Events
      */
-    protected $Events;
+    protected Events $Events;
 
     /**
      * CLI constructor.
      *
      * @param string $workingDir
-     * @param string $composerDir
      *
      * @throws \QUI\Composer\Exception
      */
-    public function __construct($workingDir, $composerDir = "")
+    public function __construct(string $workingDir)
     {
-        // Make sure the workingdir ends on slash
+        $this->workingDir = \rtrim($workingDir, '/') . '/';
+        $this->composerDir = $this->workingDir;
+        $this->Events = new QUI\Composer\Utils\Events();
 
-        $this->workingDir  = \rtrim($workingDir, '/').'/';
-        $this->composerDir = (empty($composerDir)) ? $this->workingDir : \rtrim($composerDir, '/').'/';
-        $this->Events      = new QUI\Composer\Utils\Events();
-
-        \putenv("COMPOSER_HOME=".$this->composerDir);
+        \putenv("COMPOSER_HOME=" . $this->composerDir);
 
         if (!\is_dir($workingDir)) {
             throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
@@ -72,7 +69,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return string
      */
-    protected function getPHPPath()
+    protected function getPHPPath(): ?string
     {
         if ($this->phpPath) {
             return $this->phpPath;
@@ -80,13 +77,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         if (!\defined('PHP_BINARY')) {
             $this->phpPath = 'php ';
-            $this->isFCGI  = false;
+            $this->isFCGI = false;
 
             return $this->phpPath;
         }
 
         $this->isFCGI();
-        $this->phpPath = PHP_BINARY.' ';
+        $this->phpPath = PHP_BINARY . ' ';
 
         return $this->phpPath;
     }
@@ -117,7 +114,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @return array
      * @throws Exception
      */
-    public function getVersions()
+    public function getVersions(): array
     {
         $packages = $this->runComposer('show', [
             'installed' => true
@@ -133,7 +130,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $package = \preg_replace('#([ ]){2,}#', "$1", $package);
             $package = \explode(' ', $package);
 
-            $name    = $package[0];
+            $name = $package[0];
             $version = $package[1];
 
             $result[$name] = $version;
@@ -146,72 +143,65 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Executes a composer install
      *
      * @param array $options - Additional options
-     *
-     * @return bool - True on success, false on failure
+     * @return array
      *
      * @throws Exception
      */
-    public function install($options = [])
+    public function install(array $options = []): array
     {
         if (!isset($options['prefer-dist'])) {
             $options['prefer-dist'] = true;
         }
 
-        $this->runComposer('install', $options);
-
-        return true;
+        return $this->runComposer('install', $options);
     }
 
     /**
      * Executes an composer update command
      *
      * @param array $options - Additional options
-     *
-     * @return bool
+     * @return array
      *
      * @throws Exception
      */
-    public function update($options = [])
+    public function update(array $options = []): array
     {
         if (!isset($options['prefer-dist']) && !isset($options['prefer-source'])) {
             $options['prefer-dist'] = true;
         }
 
-        $this->runComposer('update', $options);
-
-        return true;
+        return $this->runComposer('update', $options);
     }
 
     /**
      * Executes the composer require command
      *
-     * @param string|array $packages - The package
+     * @param string|array $package - The package
      * @param string $version - The version of the package
      * @param array $options
      *
-     * @return bool
+     * @return array
      */
-    public function requirePackage($packages, $version = "", $options = [])
+    public function requirePackage($package, string $version = "", array $options = []): array
     {
         if (!isset($options['prefer-dist']) && !isset($options['prefer-source'])) {
             $options['prefer-dist'] = true;
         }
 
         // Build an require string
-        if (!empty($version) && \is_string($packages)) {
-            $packages .= ":".$version;
+        if (!empty($version) && \is_string($package)) {
+            $package .= ":" . $version;
         }
 
-        $options['packages'] = $packages;
+        $options['packages'] = $package;
 
 
         try {
-            $this->runComposer('require', $options);
-
-            return true;
+            return $this->runComposer('require', $options);
         } catch (QUI\Exception $Exception) {
-            return false;
         }
+
+        return [];
     }
 
     /**
@@ -225,7 +215,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws QUI\Composer\Exception
      */
-    public function outdated($direct = false, $options = [])
+    public function outdated(bool $direct = false, array $options = []): array
     {
         if ($direct) {
             $options['--direct'] = true;
@@ -233,7 +223,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $output = $this->execComposer('outdated', $options);
 
-        $packages       = [];
+        $packages = [];
         $completeOutput = \implode("\n", $output);
 
         // find exeption
@@ -265,7 +255,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws Exception
      */
-    public function getOutdatedPackages()
+    public function getOutdatedPackages(): array
     {
         $output = $this->execComposer('update', [
             '--dry-run' => true
@@ -275,40 +265,63 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $result = [];
 
         foreach ($output as $line) {
-            if (\strpos($line, '- Updating') === false) {
+            if (\strpos($line, '- Updating') === false && \strpos($line, '- Upgrading') === false) {
                 continue;
             }
 
             $line = \str_replace("\010", '', $line); // remove backspace
             $line = \trim($line);
             $line = \str_replace('- Updating ', '', $line);
+            $line = \str_replace('- Upgrading ', '', $line);
             $line = \str_replace('Reading ', "\nReading ", $line);
 
-            $line = \explode(' to ', $line);
+            if (strpos($line, ' => ') !== false) {
+                $parts = \explode(' (', $line);
+                $package = $parts[0];
+                $versions = str_replace(')', '', $parts[1]);
 
-            // old version
-            $firstSpace = \strpos($line[0], ' ');
-            $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
+                // old version
+                $firstSpace = \strpos($versions, ' ');
+                $oldVersion = \trim(\substr($versions, 0, $firstSpace), '() ');
 
-            // new version
-            $firstSpace = \strpos($line[1], ' ');
-            $newVersion = \trim(\substr($line[1], $firstSpace), '() ');
-            $package    = \trim(\substr($line[1], 0, $firstSpace));
+                // new version
+                $newVersion = \explode(' => ', $versions)[1];
+                $firstSpace = \strpos($newVersion, ' ');
 
-            if (\strpos($oldVersion, 'Reading ') !== false) {
-                $packageStart = \strpos($line[0], $package);
-                $line[0]      = \substr($line[0], $packageStart);
+                if ($firstSpace === false) {
+                    $firstSpace = \strlen($newVersion);
+                }
 
+                $newVersion = \trim(\substr($newVersion, 0, $firstSpace), '() ');
+            } else {
+                $line = \explode(' to ', $line);
+
+                // old version
                 $firstSpace = \strpos($line[0], ' ');
                 $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
+
+                // new version
+                $firstSpace = \strpos($line[1], ' ');
+                $newVersion = \trim(\substr($line[1], $firstSpace), '() ');
+                $package = \trim(\substr($line[1], 0, $firstSpace));
+
+                if (\strpos($oldVersion, 'Reading ') !== false) {
+                    $packageStart = \strpos($line[0], $package);
+                    $line[0] = \substr($line[0], $packageStart);
+
+                    $firstSpace = \strpos($line[0], ' ');
+                    $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
+                }
             }
 
-            $result[] = [
+            $result[$package] = [
                 'package'    => $package,
                 'version'    => $newVersion,
                 'oldVersion' => $oldVersion
             ];
         }
+
+        $result = array_values($result);
 
         return $result;
     }
@@ -320,7 +333,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return bool
      */
-    public function updatesAvailable($direct = false)
+    public function updatesAvailable(bool $direct = false): bool
     {
         try {
             return \count($this->outdated($direct)) > 0 ? true : false;
@@ -336,7 +349,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return bool - true on success
      */
-    public function dumpAutoload($options = [])
+    public function dumpAutoload(array $options = []): bool
     {
         try {
             $this->execComposer('dump-autoload', $options);
@@ -355,7 +368,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array - Returns an array in the format : array( packagename => description)
      */
-    public function search($needle, $options = [])
+    public function search($needle, array $options = []): array
     {
         try {
             $output = $this->execComposer('search', $options, $needle);
@@ -398,7 +411,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array - returns an array with all installed packages
      */
-    public function show($package = "", $options = [])
+    public function show(string $package = "", array $options = []): array
     {
         try {
             $output = $this->execComposer('show', $options);
@@ -406,12 +419,12 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             return [];
         }
 
-        $regex    = "~ +~";
+        $regex = "~ +~";
         $packages = [];
 
         foreach ($output as $line) {
             // Replace all spaces (multiple or single) by a single space
-            $line  = \preg_replace($regex, " ", $line);
+            $line = \preg_replace($regex, " ", $line);
             $words = \explode(" ", $line);
 
             if ($words[0] != ""
@@ -431,7 +444,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return bool - true on success; false on failure
      */
-    public function clearCache()
+    public function clearCache(): bool
     {
         try {
             $this->execComposer('clear-cache');
@@ -459,7 +472,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @return array
      * @throws Exception
      */
-    public function why($package)
+    public function why($package): array
     {
         $options['packages'] = [$package];
 
@@ -522,22 +535,22 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         \chdir($this->workingDir);
-        \putenv("COMPOSER_HOME=".$this->composerDir);
+        \putenv("COMPOSER_HOME=" . $this->composerDir);
 
-        $command = $this->getPHPPath().' '.$this->composerDir.'composer.phar';
+        $command = $this->getPHPPath() . ' ' . $this->composerDir . 'composer.phar';
 
         if ($this->isFCGI()) {
             $command .= ' -d register_argc_argv=1';
         }
 
-        $command .= ' --working-dir='.$this->workingDir;
+        $command .= ' --working-dir=' . $this->workingDir;
         $command .= $this->getOptionString($options);
-        $command .= ' '.$cmd;
+        $command .= ' ' . $cmd;
 
         // packages list
         if (!empty($packages) && \is_array($packages)) {
             foreach ($packages as $package) {
-                $command .= ' '.$package;
+                $command .= ' ' . $package;
             }
         }
 
@@ -548,7 +561,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             foreach ($tokens as $token) {
-                $command .= ' '.$token;
+                $command .= ' ' . $token;
             }
         }
 
@@ -557,7 +570,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         if ($result['successful'] === false) {
             throw new QUI\Composer\Exception(
-                "Execution failed.\n\nLast output:\n\n".$result['output']
+                "Execution failed.\n\nLast output:\n\n" . $result['output']
             );
         }
     }
@@ -573,7 +586,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws QUI\Composer\Exception
      */
-    protected function execComposer($cmd, $options = [], $tokens = [])
+    protected function execComposer($cmd, $options = [], $tokens = []): array
     {
         $packages = [];
 
@@ -587,24 +600,24 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         \chdir($this->workingDir);
-        \putenv("COMPOSER_HOME=".$this->composerDir);
+        \putenv("COMPOSER_HOME=" . $this->composerDir);
 
         // Parse output into array and remove empty lines
         $command = $this->getPHPPath();
-        $command .= $this->composerDir.'composer.phar';
+        $command .= $this->composerDir . 'composer.phar';
 
         if ($this->isFCGI()) {
             $command .= ' -d register_argc_argv=1';
         }
 
-        $command .= ' --working-dir='.$this->workingDir;
-        $command .= ' '.$cmd;
+        $command .= ' --working-dir=' . $this->workingDir;
+        $command .= ' ' . $cmd;
         $command .= $this->getOptionString($options);
 
         // packages list
         if (!empty($packages) && \is_array($packages)) {
             foreach ($packages as $package) {
-                $command .= ' '.$package;
+                $command .= ' ' . $package;
             }
         }
 
@@ -615,7 +628,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             foreach ($tokens as $token) {
-                $command .= ' '.$token;
+                $command .= ' ' . $token;
             }
         }
 
@@ -643,13 +656,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string $cmd - composer command
      * @param array $options - composer options
-     * @param $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     * @param array $tokens - composer command tokens -> composer.phar [command] [options] [tokens]
      *
      * @return array
      * @throws QUI\Composer\Exception
      *
      */
-    protected function runComposer($cmd, $options = [], $tokens = [])
+    protected function runComposer(string $cmd, array $options = [], array $tokens = []): array
     {
         if ($this->directOutput) {
             $this->systemComposer($cmd, $options, $tokens);
@@ -667,17 +680,17 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return string
      */
-    protected function getOptionString($options)
+    protected function getOptionString(array $options): string
     {
         $optionString = "";
 
         foreach ($options as $option => $value) {
-            $option = "--".ltrim($option, "--");
+            $option = "--" . ltrim($option, "--");
 
             if ($value === true) {
-                $optionString .= ' '.\escapeshellarg($option);
+                $optionString .= ' ' . \escapeshellarg($option);
             } else {
-                $optionString .= ' '.\escapeshellarg($option)."=".\escapeshellarg(\trim($value));
+                $optionString .= ' ' . \escapeshellarg($option) . "=" . \escapeshellarg(\trim($value));
             }
         }
 
@@ -689,7 +702,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return bool
      */
-    protected function isFCGI()
+    protected function isFCGI(): ?bool
     {
         if (!\is_null($this->isFCGI)) {
             return $this->isFCGI;
@@ -715,12 +728,12 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Execute a process
      *
-     * @param $cmd
+     * @param string $cmd
      * @return array
      */
-    protected function runProcess($cmd)
+    protected function runProcess(string $cmd): array
     {
-        $self   = $this;
+        $self = $this;
         $output = '';
 
         $cmd = \str_replace("'", '', $cmd);
@@ -755,7 +768,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param callable $fn - The function to execute.
      * @param int $priority - optional, Priority of the event
      */
-    public function addEvent($event, $fn, $priority = 0)
+    public function addEvent(string $event, callable $fn, int $priority = 0)
     {
         $this->Events->addEvent($event, $fn, $priority);
     }

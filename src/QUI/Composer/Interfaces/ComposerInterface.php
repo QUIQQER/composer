@@ -3,6 +3,7 @@
 /**
  * This file contains QUI\Composer\Interfaces\Composer
  */
+
 namespace QUI\Composer\Interfaces;
 
 /**
@@ -18,7 +19,7 @@ interface ComposerInterface
      * @param string $workingDir - The workingdirectory for composer (Directory, which contains the composer.json)
      * @throws \Exception
      */
-    public function __construct($workingDir);
+    public function __construct(string $workingDir);
 
     /**
      * Unmute the execution
@@ -37,7 +38,7 @@ interface ComposerInterface
      *
      * @return array - The output of the command split into an array. One line per entry.
      */
-    public function install($options = array());
+    public function install(array $options = []): array;
 
     /**
      * Executes the composer update command
@@ -46,7 +47,7 @@ interface ComposerInterface
      *
      * @return array - The output of the command split into an array. One line per entry.
      */
-    public function update($options = array());
+    public function update(array $options = []): array;
 
     /**
      * Executes the composer require command
@@ -59,26 +60,26 @@ interface ComposerInterface
      *
      * @internal param array $options - Optional commandline parameters
      */
-    public function requirePackage($package, $version = "", $options = array());
+    public function requirePackage($package, string $version = "", array $options = []): array;
 
     /**
      * Gets all outdated packages
      *
-     * @param  bool $direct - If true : Checks only direct requirements
+     * @param bool $direct - If true : Checks only direct requirements
      * @param array $options
      *
      * @return array - Array with names of all outdated packages
      */
-    public function outdated($direct = false, $options = array());
+    public function outdated(bool $direct = false, array $options = []): array;
 
     /**
      * Checks if updates are available
      *
-     * @param  bool $direct - If true : Checks only direct requirements
+     * @param bool $direct - If true : Checks only direct requirements
      *
      * @return bool - true if updates are available, false if everything is up to date
      */
-    public function updatesAvailable($direct);
+    public function updatesAvailable(bool $direct): bool;
 
     /**
      * Generates the autoloader files again without downloading anything
@@ -86,7 +87,7 @@ interface ComposerInterface
      * @param array $options
      * @return bool - true on success
      */
-    public function dumpAutoload($options = array());
+    public function dumpAutoload(array $options = []): bool;
 
     /**
      * Searches the repositories for the given needle
@@ -96,7 +97,7 @@ interface ComposerInterface
      *
      * @return array - Returns an array in the format : array( packagename => description)
      */
-    public function search($needle, $options = array());
+    public function search($needle, array $options = []): array;
 
     /**
      * Lists all installed packages
@@ -106,14 +107,14 @@ interface ComposerInterface
      *
      * @return array - returns an array with all installed packages
      */
-    public function show($package = "", $options = array());
+    public function show(string $package = "", array $options = []): array;
 
     /**
      * Clears the composer cache
      *
      * @return bool - true on success; false on failure
      */
-    public function clearCache();
+    public function clearCache(): bool;
 
     /**
      * Return the packages which could be updated
@@ -122,15 +123,15 @@ interface ComposerInterface
      *
      * @throws \QUI\Composer\Exception
      */
-    public function getOutdatedPackages();
+    public function getOutdatedPackages(): array;
 
     /**
      * Executes the composer why command.
      * This commands displays why the package has been installed and which packages require it.
-     * 
+     *
      * @param $package
      *
      * @return array
      */
-    public function why($package);
+    public function why($package): array;
 }

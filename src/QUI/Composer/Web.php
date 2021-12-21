@@ -17,36 +17,35 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * @var Application
      */
-    protected $Application;
+    protected Application $Application;
 
     /**
      * @var string
      */
-    protected $workingDir;
+    protected string $workingDir;
 
     /**
      * @var string
      */
-    protected $composerDir;
+    protected string $composerDir;
 
     /**
      * @var Utils\Events
      */
-    protected $Events;
+    protected Events $Events;
 
     /**
      * (Composer) Web constructor.
      *
      * @param string $workingDir
-     * @param string $composerDir
      *
      * @throws \QUI\Composer\Exception
      */
-    public function __construct($workingDir, $composerDir = "")
+    public function __construct(string $workingDir)
     {
         // we must set argv params for composer
         $_SERVER['argv'][0] = \pathinfo(__FILE__, \PATHINFO_BASENAME);
-        $_SERVER['argc']    = 1;
+        $_SERVER['argc'] = 1;
 
         // we need that for hirak/prestissimo
         $GLOBALS['argv'] = $_SERVER['argv'];
@@ -56,19 +55,19 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         if (empty($composerDir)) {
-            $this->composerDir = \rtrim($workingDir, '/').'/';
+            $this->composerDir = \rtrim($workingDir, '/') . '/';
         } else {
-            $this->composerDir = \rtrim($composerDir, '/').'/';
+            $this->composerDir = \rtrim($composerDir, '/') . '/';
         }
 
-        $this->Events     = new QUI\Composer\Utils\Events();
-        $this->workingDir = \rtrim($workingDir, "/").'/';
+        $this->Events = new QUI\Composer\Utils\Events();
+        $this->workingDir = \rtrim($workingDir, "/") . '/';
 
         if (!\is_dir($workingDir)) {
             throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
         }
 
-        if (!\file_exists($this->composerDir."composer.json")) {
+        if (!\file_exists($this->composerDir . "composer.json")) {
             throw new QUI\Composer\Exception("Composer.json not found", 404);
         }
 
@@ -76,7 +75,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $this->Application->setAutoExit(false);
         $this->Application->resetComposer();
 
-        \putenv("COMPOSER_HOME=".$this->composerDir);
+        \putenv("COMPOSER_HOME=" . $this->composerDir);
     }
 
     /**
@@ -84,7 +83,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return Application
      */
-    public function getApplication()
+    public function getApplication(): Application
     {
         return $this->Application;
     }
@@ -109,7 +108,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @return array
      * @throws Exception
      */
-    public function getVersions()
+    public function getVersions(): array
     {
         $packages = $this->executeComposer('show', [
             '--installed' => true
@@ -125,7 +124,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $package = \preg_replace('#([ ]){2,}#', "$1", $package);
             $package = \explode(' ', $package);
 
-            $name    = $package[0];
+            $name = $package[0];
             $version = $package[1];
 
             $result[$name] = $version;
@@ -140,8 +139,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options - additional options
      *
      * @return array
+     * @throws Exception
      */
-    public function install($options = [])
+    public function install(array $options = []): array
     {
         if (!isset($options['--prefer-dist'])) {
             $options['--prefer-dist'] = true;
@@ -156,8 +156,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options - Additional options
      *
      * @return array
+     * @throws Exception
      */
-    public function update($options = [])
+    public function update(array $options = []): array
     {
         if (!isset($options['--prefer-dist']) && !isset($options['prefer-source'])) {
             $options['--prefer-dist'] = true;
@@ -169,27 +170,28 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer require
      *
-     * @param string|array $packages - The package name
+     * @param string|array $package - The package name
      * @param string $version - The package version
      * @param array $options
      *
      * @return array
+     * @throws Exception
      */
-    public function requirePackage($packages, $version = "", $options = [])
+    public function requirePackage($package, string $version = "", array $options = []): array
     {
         if (!isset($options['prefer-dist']) && !isset($options['prefer-source'])) {
             $options['--prefer-dist'] = true;
         }
 
-        if (!empty($version) && \is_string($packages)) {
-            $packages .= ":".$version;
+        if (!empty($version) && \is_string($package)) {
+            $package .= ":" . $version;
         }
 
-        if (!\is_array($packages)) {
-            $packages = [$packages];
+        if (!\is_array($package)) {
+            $package = [$package];
         }
 
-        $options['packages'] = $packages;
+        $options['packages'] = $package;
 
         return $this->executeComposer('require', $options);
     }
@@ -200,8 +202,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param bool $direct - Only direct dependencies
      *
      * @return bool - true if updates are available, false if no updates are available
+     * @throws Exception
      */
-    public function updatesAvailable($direct = false)
+    public function updatesAvailable(bool $direct = false): bool
     {
         $this->resetComposer();
 
@@ -222,7 +225,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws QUI\Composer\Exception
      */
-    public function outdated($direct = false, $options = [])
+    public function outdated(bool $direct = false, array $options = []): array
     {
         $result = $this->executeComposer('show', [
             '--outdated' => true,
@@ -272,8 +275,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Return all outdated packages
      *
      * @return array
+     * @throws Exception
      */
-    public function getOutdatedPackages()
+    public function getOutdatedPackages(): array
     {
         $result = [];
         $output = $this->executeComposer('update', [
@@ -299,11 +303,11 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             // new version
             $firstSpace = \strpos($line[1], ' ');
             $newVersion = \trim(\substr($line[1], $firstSpace), '() ');
-            $package    = \trim(\substr($line[1], 0, $firstSpace));
+            $package = \trim(\substr($line[1], 0, $firstSpace));
 
             if (\strpos($oldVersion, 'Reading ') !== false) {
                 $packageStart = \strpos($line[0], $package);
-                $line[0]      = \substr($line[0], $packageStart);
+                $line[0] = \substr($line[0], $packageStart);
 
                 $firstSpace = \strpos($line[0], ' ');
                 $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
@@ -325,8 +329,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options
      *
      * @return bool - true on success
+     * @throws Exception
      */
-    public function dumpAutoload($options = [])
+    public function dumpAutoload(array $options = []): bool
     {
         $this->executeComposer('dump-autoload', $options);
 
@@ -340,8 +345,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options
      *
      * @return array - Returns an array in the format : array( packagename => description)
+     * @throws Exception
      */
-    public function search($needle, $options = [])
+    public function search($needle, array $options = []): array
     {
         $result = $this->executeComposer('search', [
             "tokens" => [$needle]
@@ -391,20 +397,21 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options
      *
      * @return array - returns an array with all installed packages
+     * @throws Exception
      */
-    public function show($package = "", $options = [])
+    public function show(string $package = "", array $options = []): array
     {
         if (!empty($package)) {
             $options["tokens"] = [$package];
         }
 
-        $result   = $this->executeComposer('show', $options);
-        $regex    = "~ +~";
+        $result = $this->executeComposer('show', $options);
+        $regex = "~ +~";
         $packages = [];
 
         foreach ($result as $line) {
             // Replace all spaces (multiple or single) by a single space
-            $line  = \preg_replace($regex, " ", $line);
+            $line = \preg_replace($regex, " ", $line);
             $words = \explode(" ", $line);
 
             if ($words[0] != ""
@@ -423,8 +430,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Clears the composer cache
      *
      * @return bool - true on success; false on failure
+     * @throws \Exception
      */
-    public function clearCache()
+    public function clearCache(): bool
     {
         $this->resetComposer();
 
@@ -437,7 +445,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         $params = \array_merge($params);
 
-        $Input  = new ArrayInput($params);
+        $Input = new ArrayInput($params);
         $Output = new ArrayOutput();
 
         $this->Application->run($Input, $Output);
@@ -464,10 +472,10 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @return array
      * @throws Exception
      */
-    public function why($package)
+    public function why($package): array
     {
         $options['package'] = $package;
-        $result             = [];
+        $result = [];
 
         $output = $this->executeComposer('why', $options);
 
@@ -523,7 +531,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws Exception
      */
-    protected function executeComposer($command, $options = [])
+    protected function executeComposer($command, array $options = []): array
     {
         $this->resetComposer();
 
@@ -546,7 +554,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             \ob_end_clean();
         }
 
-        $output         = $Output->getLines();
+        $output = $Output->getLines();
         $completeOutput = \implode("\n", $output);
 
         // find exception
@@ -584,7 +592,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param callable $fn - The function to execute.
      * @param int $priority - optional, Priority of the event
      */
-    public function addEvent($event, $fn, $priority = 0)
+    public function addEvent(string $event, callable $fn, int $priority = 0)
     {
         $this->Events->addEvent($event, $fn, $priority);
     }
