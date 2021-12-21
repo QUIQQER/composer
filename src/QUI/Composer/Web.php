@@ -279,7 +279,6 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function getOutdatedPackages(): array
     {
-        $result = [];
         $output = $this->executeComposer('update', [
             '--dry-run' => true
         ]);
@@ -288,29 +287,52 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $result = [];
 
         foreach ($output as $line) {
-            if (\strpos($line, '- Updating') === false) {
+            if (\strpos($line, '- Updating') === false && \strpos($line, '- Upgrading') === false) {
                 continue;
             }
 
+
             $line = \trim($line);
             $line = \str_replace('- Updating ', '', $line);
-            $line = \explode(' to ', $line);
+            $line = \str_replace('- Upgrading ', '', $line);
 
-            // old version
-            $firstSpace = \strpos($line[0], ' ');
-            $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
+            if (strpos($line, ' => ') !== false) {
+                $parts = \explode(' (', $line);
+                $package = $parts[0];
+                $versions = str_replace(')', '', $parts[1]);
 
-            // new version
-            $firstSpace = \strpos($line[1], ' ');
-            $newVersion = \trim(\substr($line[1], $firstSpace), '() ');
-            $package = \trim(\substr($line[1], 0, $firstSpace));
+                // old version
+                $firstSpace = \strpos($versions, ' ');
+                $oldVersion = \trim(\substr($versions, 0, $firstSpace), '() ');
 
-            if (\strpos($oldVersion, 'Reading ') !== false) {
-                $packageStart = \strpos($line[0], $package);
-                $line[0] = \substr($line[0], $packageStart);
+                // new version
+                $newVersion = \explode(' => ', $versions)[1];
+                $firstSpace = \strpos($newVersion, ' ');
 
+                if ($firstSpace === false) {
+                    $firstSpace = \strlen($newVersion);
+                }
+
+                $newVersion = \trim(\substr($newVersion, 0, $firstSpace), '() ');
+            } else {
+                $line = \explode(' to ', $line);
+
+                // old version
                 $firstSpace = \strpos($line[0], ' ');
                 $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
+
+                // new version
+                $firstSpace = \strpos($line[1], ' ');
+                $newVersion = \trim(\substr($line[1], $firstSpace), '() ');
+                $package = \trim(\substr($line[1], 0, $firstSpace));
+
+                if (\strpos($oldVersion, 'Reading ') !== false) {
+                    $packageStart = \strpos($line[0], $package);
+                    $line[0] = \substr($line[0], $packageStart);
+
+                    $firstSpace = \strpos($line[0], ' ');
+                    $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
+                }
             }
 
             $result[] = [
