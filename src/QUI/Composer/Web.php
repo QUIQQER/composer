@@ -2,10 +2,41 @@
 
 namespace QUI\Composer;
 
-use QUI;
 use Composer\Console\Application;
+use QUI;
 use QUI\Composer\Utils\Events;
 use Symfony\Component\Console\Input\ArrayInput;
+
+use function array_merge;
+use function array_values;
+use function chdir;
+use function count;
+use function define;
+use function defined;
+use function explode;
+use function file_exists;
+use function fopen;
+use function implode;
+use function is_array;
+use function is_dir;
+use function is_string;
+use function json_decode;
+use function ob_end_clean;
+use function ob_get_clean;
+use function ob_get_contents;
+use function ob_start;
+use function pathinfo;
+use function preg_match;
+use function preg_replace;
+use function putenv;
+use function rtrim;
+use function str_replace;
+use function strlen;
+use function strpos;
+use function substr;
+use function trim;
+
+use const PATHINFO_BASENAME;
 
 /**
  * Class Web
@@ -39,43 +70,43 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string $workingDir
      *
-     * @throws \QUI\Composer\Exception
+     * @throws Exception
      */
     public function __construct(string $workingDir)
     {
         // we must set argv params for composer
-        $_SERVER['argv'][0] = \pathinfo(__FILE__, \PATHINFO_BASENAME);
-        $_SERVER['argc'] = 1;
+        $_SERVER['argv'][0] = pathinfo(__FILE__, PATHINFO_BASENAME);
+        $_SERVER['argc']    = 1;
 
         // we need that for hirak/prestissimo
         $GLOBALS['argv'] = $_SERVER['argv'];
 
-        if (!\defined('STDIN')) {
-            \define('STDIN', \fopen("php://stdin", "r"));
+        if (!defined('STDIN')) {
+            define('STDIN', fopen("php://stdin", "r"));
         }
 
         if (empty($composerDir)) {
-            $this->composerDir = \rtrim($workingDir, '/') . '/';
+            $this->composerDir = rtrim($workingDir, '/') . '/';
         } else {
-            $this->composerDir = \rtrim($composerDir, '/') . '/';
+            $this->composerDir = rtrim($composerDir, '/') . '/';
         }
 
-        $this->Events = new QUI\Composer\Utils\Events();
-        $this->workingDir = \rtrim($workingDir, "/") . '/';
+        $this->Events     = new QUI\Composer\Utils\Events();
+        $this->workingDir = rtrim($workingDir, "/") . '/';
 
-        if (!\is_dir($workingDir)) {
-            throw new QUI\Composer\Exception("Workingdirectory does not exist", 404);
+        if (!is_dir($workingDir)) {
+            throw new Exception("Workingdirectory does not exist", 404);
         }
 
-        if (!\file_exists($this->composerDir . "composer.json")) {
-            throw new QUI\Composer\Exception("Composer.json not found", 404);
+        if (!file_exists($this->composerDir . "composer.json")) {
+            throw new Exception("Composer.json not found", 404);
         }
 
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
         $this->Application->resetComposer();
 
-        \putenv("COMPOSER_HOME=" . $this->composerDir);
+        putenv("COMPOSER_HOME=" . $this->composerDir);
     }
 
     /**
@@ -117,14 +148,14 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $result = [];
 
         foreach ($packages as $package) {
-            if (\strpos($package, '<warning>') === 0) {
+            if (strpos($package, '<warning>') === 0) {
                 continue;
             }
 
-            $package = \preg_replace('#([ ]){2,}#', "$1", $package);
-            $package = \explode(' ', $package);
+            $package = preg_replace('#([ ]){2,}#', "$1", $package);
+            $package = explode(' ', $package);
 
-            $name = $package[0];
+            $name    = $package[0];
             $version = $package[1];
 
             $result[$name] = $version;
@@ -183,11 +214,11 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $options['--prefer-dist'] = true;
         }
 
-        if (!empty($version) && \is_string($package)) {
+        if (!empty($version) && is_string($package)) {
             $package .= ":" . $version;
         }
 
-        if (!\is_array($package)) {
+        if (!is_array($package)) {
             $package = [$package];
         }
 
@@ -208,7 +239,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     {
         $this->resetComposer();
 
-        if (\count($this->outdated($direct)) > 0) {
+        if (count($this->outdated($direct)) > 0) {
             return true;
         }
 
@@ -223,7 +254,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array - Array of package names
      *
-     * @throws QUI\Composer\Exception
+     * @throws Exception
      */
     public function outdated(bool $direct = false, array $options = []): array
     {
@@ -237,23 +268,23 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         // look for the packages within the composer outpu
         foreach ($result as $line) {
-            if (\strpos($line, '<warning>You') !== false) {
+            if (strpos($line, '<warning>You') !== false) {
                 continue;
             }
 
-            if (\strpos($line, 'Reading') === 0) {
+            if (strpos($line, 'Reading') === 0) {
                 continue;
             }
 
-            if (\strpos($line, 'Failed') === 0) {
+            if (strpos($line, 'Failed') === 0) {
                 continue;
             }
 
-            if (\strpos($line, 'Importing') === 0) {
+            if (strpos($line, 'Importing') === 0) {
                 continue;
             }
 
-            $outdated = \json_decode($line, true)['installed'];
+            $outdated = json_decode($line, true)['installed'];
             break;
         }
 
@@ -287,62 +318,66 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $result = [];
 
         foreach ($output as $line) {
-            if (\strpos($line, '- Updating') === false && \strpos($line, '- Upgrading') === false) {
+            if (strpos($line, '- Updating') === false && strpos($line, '- Upgrading') === false) {
                 continue;
             }
 
 
-            $line = \trim($line);
-            $line = \str_replace('- Updating ', '', $line);
-            $line = \str_replace('- Upgrading ', '', $line);
+            $line = trim($line);
+            $line = str_replace('- Updating ', '', $line);
+            $line = str_replace('- Upgrading ', '', $line);
 
             if (strpos($line, ' => ') !== false) {
-                $parts = \explode(' (', $line);
-                $package = $parts[0];
+                $parts    = explode(' (', $line);
+                $package  = $parts[0];
                 $versions = str_replace(')', '', $parts[1]);
 
                 // old version
-                $firstSpace = \strpos($versions, ' ');
-                $oldVersion = \trim(\substr($versions, 0, $firstSpace), '() ');
+                $firstSpace = strpos($versions, ' ');
+                $oldVersion = trim(substr($versions, 0, $firstSpace), '() ');
 
                 // new version
-                $newVersion = \explode(' => ', $versions)[1];
-                $firstSpace = \strpos($newVersion, ' ');
+                $newVersion = explode(' => ', $versions)[1];
+                $firstSpace = strpos($newVersion, ' ');
 
                 if ($firstSpace === false) {
-                    $firstSpace = \strlen($newVersion);
+                    $firstSpace = strlen($newVersion);
                 }
 
-                $newVersion = \trim(\substr($newVersion, 0, $firstSpace), '() ');
+                $newVersion = trim(substr($newVersion, 0, $firstSpace), '() ');
             } else {
-                $line = \explode(' to ', $line);
+                $line = explode(' to ', $line);
 
                 // old version
-                $firstSpace = \strpos($line[0], ' ');
-                $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
+                $firstSpace = strpos($line[0], ' ');
+                $oldVersion = trim(substr($line[0], $firstSpace), '() ');
 
                 // new version
-                $firstSpace = \strpos($line[1], ' ');
-                $newVersion = \trim(\substr($line[1], $firstSpace), '() ');
-                $package = \trim(\substr($line[1], 0, $firstSpace));
+                $firstSpace = strpos($line[1], ' ');
+                $newVersion = trim(substr($line[1], $firstSpace), '() ');
+                $package    = trim(substr($line[1], 0, $firstSpace));
 
-                if (\strpos($oldVersion, 'Reading ') !== false) {
-                    $packageStart = \strpos($line[0], $package);
-                    $line[0] = \substr($line[0], $packageStart);
+                if (strpos($oldVersion, 'Reading ') !== false) {
+                    $packageStart = strpos($line[0], $package);
+                    $line[0]      = substr($line[0], $packageStart);
 
-                    $firstSpace = \strpos($line[0], ' ');
-                    $oldVersion = \trim(\substr($line[0], $firstSpace), '() ');
+                    $firstSpace = strpos($line[0], ' ');
+                    $oldVersion = trim(substr($line[0], $firstSpace), '() ');
                 }
             }
 
-            $result[] = [
+            if (isset($result[$package])) {
+                continue;
+            }
+
+            $result[$package] = [
                 'package'    => $package,
                 'version'    => $newVersion,
                 'oldVersion' => $oldVersion
             ];
         }
 
-        return $result;
+        return array_values($result);
     }
 
     /**
@@ -378,31 +413,31 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $packages = [];
 
         foreach ($result as $line) {
-            $line = \str_replace("\010", '', $line); // remove backspace
-            $line = \trim($line);
-            $line = \str_replace('- Updating ', '', $line);
-            $line = \str_replace('Reading ', "\nReading ", $line);
-            $line = \trim($line);
+            $line = str_replace("\010", '', $line); // remove backspace
+            $line = trim($line);
+            $line = str_replace('- Updating ', '', $line);
+            $line = str_replace('Reading ', "\nReading ", $line);
+            $line = trim($line);
 
-            if (\strpos($line, 'Reading ') === 0
-                || \strpos($line, 'Failed to') === 0
-                || \strpos($line, 'Executing command ') === 0
-                || \strpos($line, 'Executing branch ') === 0
-                || \strpos($line, 'Importing branch ') === 0
-                || \strpos($line, 'Loading config file ') === 0
-                || \strpos($line, 'Changed CWD to ') === 0
-                || \strpos($line, 'Checked CA file ') === 0
-                || \strpos($line, 'Loading plugin ') === 0
-                || \strpos($line, 'Running ') === 0
+            if (strpos($line, 'Reading ') === 0
+                || strpos($line, 'Failed to') === 0
+                || strpos($line, 'Executing command ') === 0
+                || strpos($line, 'Executing branch ') === 0
+                || strpos($line, 'Importing branch ') === 0
+                || strpos($line, 'Loading config file ') === 0
+                || strpos($line, 'Changed CWD to ') === 0
+                || strpos($line, 'Checked CA file ') === 0
+                || strpos($line, 'Loading plugin ') === 0
+                || strpos($line, 'Running ') === 0
             ) {
                 continue;
             }
 
-            if (\strpos($line, 'Writing ') === 0 && \strpos($line, 'into cache') !== false) {
+            if (strpos($line, 'Writing ') === 0 && strpos($line, 'into cache') !== false) {
                 continue;
             }
 
-            $split = \explode(" ", $line, 2);
+            $split = explode(" ", $line, 2);
 
             if (isset($split[0]) && isset($split[1])) {
                 $packages[$split[0]] = $split[1];
@@ -427,18 +462,18 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $options["tokens"] = [$package];
         }
 
-        $result = $this->executeComposer('show', $options);
-        $regex = "~ +~";
+        $result   = $this->executeComposer('show', $options);
+        $regex    = "~ +~";
         $packages = [];
 
         foreach ($result as $line) {
             // Replace all spaces (multiple or single) by a single space
-            $line = \preg_replace($regex, " ", $line);
-            $words = \explode(" ", $line);
+            $line  = preg_replace($regex, " ", $line);
+            $words = explode(" ", $line);
 
             if ($words[0] != ""
                 && !empty($words[0])
-                && \substr($words[0], 0, 1) != chr(8)
+                && substr($words[0], 0, 1) != chr(8)
                 && $words[0] != "Reading"
             ) {
                 $packages[] = $words[0];
@@ -458,16 +493,16 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     {
         $this->resetComposer();
 
-        \chdir($this->workingDir);
+        chdir($this->workingDir);
 
         $params = [
             "command"       => "clear-cache",
             "--working-dir" => $this->workingDir
         ];
 
-        $params = \array_merge($params);
+        $params = array_merge($params);
 
-        $Input = new ArrayInput($params);
+        $Input  = new ArrayInput($params);
         $Output = new ArrayOutput();
 
         $this->Application->run($Input, $Output);
@@ -497,30 +532,30 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     public function why($package): array
     {
         $options['package'] = $package;
-        $result = [];
+        $result             = [];
 
         $output = $this->executeComposer('why', $options);
 
         foreach ($output as $line) {
-            if (\strpos($line, '<warning>You') !== false) {
+            if (strpos($line, '<warning>You') !== false) {
                 continue;
             }
 
-            if (\strpos($line, 'Reading') === 0) {
+            if (strpos($line, 'Reading') === 0) {
                 continue;
             }
 
-            if (\strpos($line, 'Failed') === 0) {
+            if (strpos($line, 'Failed') === 0) {
                 continue;
             }
 
-            if (\strpos($line, 'Importing') === 0) {
+            if (strpos($line, 'Importing') === 0) {
                 continue;
             }
 
-            \preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches);
+            preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches);
 
-            if (!isset($matches[1]) || !isset($matches[1]) || !isset($matches[1])) {
+            if (!isset($matches[1]) || !isset($matches[2]) || !isset($matches[3])) {
                 continue;
             }
 
@@ -557,9 +592,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     {
         $this->resetComposer();
 
-        \chdir($this->workingDir);
+        chdir($this->workingDir);
 
-        $params = \array_merge([
+        $params = array_merge([
             "command"       => $command,
             "--working-dir" => $this->workingDir
         ], $options);
@@ -568,37 +603,37 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         $Output = new ArrayOutput();
 
-        \ob_start();
+        ob_start();
         $this->Application->run($Input, $Output);
 
-        if (\ob_get_contents()) {
-            \ob_get_clean();
-            \ob_end_clean();
+        if (ob_get_contents()) {
+            ob_get_clean();
+            ob_end_clean();
         }
 
-        $output = $Output->getLines();
-        $completeOutput = \implode("\n", $output);
+        $output         = $Output->getLines();
+        $completeOutput = implode("\n", $output);
 
         // find exception
         $throwExceptionType = function ($exceptionType) use ($output) {
             foreach ($output as $key => $line) {
-                if (\strpos($line, $exceptionType) === false) {
+                if (strpos($line, $exceptionType) === false) {
                     continue;
                 }
 
-                throw new QUI\Composer\Exception($output[$key + 1]);
+                throw new Exception($output[$key + 1]);
             }
         };
 
-        if (\strpos($completeOutput, '[RuntimeException]') !== false) {
+        if (strpos($completeOutput, '[RuntimeException]') !== false) {
             $throwExceptionType('[RuntimeException]');
         }
 
-        if (\strpos($completeOutput, '[Symfony\Component\Console\Exception\InvalidArgumentException]') !== false) {
+        if (strpos($completeOutput, '[Symfony\Component\Console\Exception\InvalidArgumentException]') !== false) {
             $throwExceptionType('[Symfony\Component\Console\Exception\InvalidArgumentException]');
         }
 
-        if (\strpos($completeOutput, '[ErrorException]') !== false) {
+        if (strpos($completeOutput, '[ErrorException]') !== false) {
             $throwExceptionType('[ErrorException]');
         }
 
