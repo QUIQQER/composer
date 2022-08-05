@@ -718,7 +718,10 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             if ($value === true) {
                 $optionString .= ' ' . escapeshellarg($option);
             } else {
-                $optionString .= ' ' . escapeshellarg($option) . "=" . escapeshellarg(trim($value));
+                if ($value === false) {
+                } else {
+                    $optionString .= ' ' . escapeshellarg($option) . "=" . escapeshellarg(trim($value));
+                }
             }
         }
 
