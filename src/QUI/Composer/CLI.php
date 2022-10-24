@@ -717,6 +717,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
             if ($value === true) {
                 $optionString .= ' ' . escapeshellarg($option);
+            } elseif (is_array($value)) {
+                $optionString = ' ' . $option . "=" . escapeshellarg(trim(implode(';', $value)));
             } else {
                 if ($value === false) {
                 } else {
