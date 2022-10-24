@@ -64,9 +64,9 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function __construct(string $workingDir)
     {
-        $this->workingDir = \rtrim($workingDir, '/') . '/';
+        $this->workingDir  = \rtrim($workingDir, '/') . '/';
         $this->composerDir = $this->workingDir;
-        $this->Events = new QUI\Composer\Utils\Events();
+        $this->Events      = new QUI\Composer\Utils\Events();
 
         if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
             $this->setMode(self::MODE_CLI);
@@ -88,12 +88,12 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
         switch ($mode) {
             case self::MODE_CLI:
                 $this->Runner = new CLI($this->workingDir, $this->composerDir);
-                $this->mode = self::MODE_CLI;
+                $this->mode   = self::MODE_CLI;
                 break;
 
             case self::MODE_WEB:
                 $this->Runner = new Web($this->workingDir, $this->composerDir);
-                $this->mode = self::MODE_WEB;
+                $this->mode   = self::MODE_WEB;
                 break;
         }
 
@@ -124,6 +124,14 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     public function getVersions(): array
     {
         return $this->Runner->getVersions();
+    }
+
+    /**
+     * @return string
+     */
+    public function getWorkingDir(): string
+    {
+        return $this->workingDir;
     }
 
     /**
