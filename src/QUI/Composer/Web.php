@@ -599,12 +599,17 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             "--working-dir" => $this->workingDir
         ], $options);
 
-        $Input = new ArrayInput($params);
-
+        $Input  = new ArrayInput($params);
         $Output = new ArrayOutput();
 
         ob_start();
-        $this->Application->run($Input, $Output);
+        $code = $this->Application->run($Input, $Output);
+
+        if ($code !== 0) {
+            throw new Exception('Something went wrong', $code, [
+                'output' => $Output->getLines()
+            ]);
+        }
 
         if (ob_get_contents()) {
             ob_get_clean();
