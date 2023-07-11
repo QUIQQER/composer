@@ -460,7 +460,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     public function show(string $package = "", array $options = []): array
     {
         if (!empty($package)) {
-            $options["tokens"] = [$package];
+            $options["package"] = $package;
         }
 
         $result = $this->executeComposer('show', $options);
