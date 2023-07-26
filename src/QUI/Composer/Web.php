@@ -6,6 +6,7 @@ use Composer\Console\Application;
 use QUI;
 use QUI\Composer\Utils\Events;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 use function array_merge;
 use function array_values;
@@ -66,6 +67,11 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     protected Events $Events;
 
     /**
+     * @var OutputInterface|null
+     */
+    protected ?OutputInterface $Output = null;
+
+    /**
      * (Composer) Web constructor.
      *
      * @param string $workingDir
@@ -107,6 +113,17 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $this->Application->resetComposer();
 
         putenv("COMPOSER_HOME=" . $this->composerDir);
+    }
+
+    /**
+     * Sets the output interface.
+     *
+     * @param OutputInterface $Output The output interface to be set.
+     * @return void
+     */
+    public function setOutput(OutputInterface $Output): void
+    {
+        $this->Output = $Output;
     }
 
     /**
@@ -505,7 +522,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $params = array_merge($params);
 
         $Input = new ArrayInput($params);
-        $Output = new ArrayOutput();
+        $Output = $this->Output ?? new ArrayOutput();
 
         $this->Application->run($Input, $Output);
 
@@ -602,7 +619,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         ], $options);
 
         $Input = new ArrayInput($params);
-        $Output = new ArrayOutput();
+        $Output = $this->Output ?? new ArrayOutput();
 
         ob_start();
         $code = $this->Application->run($Input, $Output);

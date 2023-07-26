@@ -7,6 +7,9 @@
 namespace QUI\Composer;
 
 use QUI;
+use Symfony\Component\Console\Output\OutputInterface;
+
+use function rtrim;
 
 /**
  * Class Composer
@@ -57,16 +60,18 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Composer constructor.
-     * Can be used as general accespoint to composer.
+     *
+     * Can be used as general access point to composer.
      * Will use CLI composer if shell_exec is available
      *
      * @param string $workingDir
+     * @throws Exception
      */
     public function __construct(string $workingDir)
     {
-        $this->workingDir  = \rtrim($workingDir, '/') . '/';
+        $this->workingDir = rtrim($workingDir, '/') . '/';
         $this->composerDir = $this->workingDir;
-        $this->Events      = new QUI\Composer\Utils\Events();
+        $this->Events = new QUI\Composer\Utils\Events();
 
         if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
             $this->setMode(self::MODE_CLI);
@@ -76,10 +81,22 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * Sets the output interface.
+     *
+     * @param OutputInterface $Output The output interface to be set.
+     * @return void
+     */
+    public function setOutput(OutputInterface $Output): void
+    {
+        $this->Runner->setOutput($Output);
+    }
+
+    /**
      * Set the composer mode
      * CLI, or web
      *
      * @param int $mode - self::MODE_CLI, self::MODE_WEB
+     * @throws Exception
      */
     public function setMode(int $mode)
     {
@@ -88,12 +105,12 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
         switch ($mode) {
             case self::MODE_CLI:
                 $this->Runner = new CLI($this->workingDir, $this->composerDir);
-                $this->mode   = self::MODE_CLI;
+                $this->mode = self::MODE_CLI;
                 break;
 
             case self::MODE_WEB:
                 $this->Runner = new Web($this->workingDir, $this->composerDir);
-                $this->mode   = self::MODE_WEB;
+                $this->mode = self::MODE_WEB;
                 break;
         }
 
@@ -113,7 +130,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return Interfaces\ComposerInterface
      */
-    public function getRunner()
+    public function getRunner(): Interfaces\ComposerInterface
     {
         return $this->Runner;
     }
@@ -197,7 +214,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array
      *
-     * @throws \QUI\Composer\Exception
+     * @throws Exception
      */
     public function getOutdatedPackages(): array
     {
