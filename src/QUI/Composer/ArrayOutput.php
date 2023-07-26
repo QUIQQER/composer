@@ -1,13 +1,16 @@
 <?php
+
 /**
  * This File contains QUI\Composer\ArrayOutput
  */
 
 namespace QUI\Composer;
 
-use SebastianBergmann\CodeCoverage\Report\PHP;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Output\Output;
+
+use function json_encode;
+use function strpos;
 
 /**
  * Class ArrayOutput
@@ -19,13 +22,12 @@ class ArrayOutput extends Output
     /**
      * @var string[] $lines - Contains all lines of the output
      */
-    protected $lines = [];
+    protected array $lines = [];
 
     /**
      * @var string $curLine - The current line that is written.
      */
-    protected $curLine = "";
-
+    protected string $curLine = "";
 
     /**
      * ArrayOutput constructor.
@@ -47,7 +49,7 @@ class ArrayOutput extends Output
     {
         $this->curLine .= $message;
 
-        if (\strpos(\json_encode($message), PHP_EOL) > 0 || \strpos(\json_encode($message), '\b') > 0) {
+        if (strpos(json_encode($message), PHP_EOL) > 0 || strpos(json_encode($message), '\b') > 0) {
             $newline = true;
         }
 
@@ -62,9 +64,9 @@ class ArrayOutput extends Output
 
     /**
      * Returns all lines of the output in an array
-     * @return \string[]
+     * @return string[]
      */
-    public function getLines()
+    public function getLines(): array
     {
         return $this->lines;
     }
