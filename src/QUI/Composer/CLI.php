@@ -4,6 +4,7 @@ namespace QUI\Composer;
 
 use QUI;
 use QUI\Composer\Utils\Events;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
 use function array_filter;
@@ -71,6 +72,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     protected Events $Events;
 
     /**
+     * @var mixed $Output
+     */
+    protected ?OutputInterface $Output = null;
+
+    /**
      * CLI constructor.
      *
      * @param string $workingDir
@@ -79,15 +85,26 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function __construct(string $workingDir)
     {
-        $this->workingDir  = rtrim($workingDir, '/') . '/';
+        $this->workingDir = rtrim($workingDir, '/') . '/';
         $this->composerDir = $this->workingDir;
-        $this->Events      = new QUI\Composer\Utils\Events();
+        $this->Events = new QUI\Composer\Utils\Events();
 
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
         if (!is_dir($workingDir)) {
             throw new Exception("Workingdirectory does not exist", 404);
         }
+    }
+
+    /**
+     * Sets the output interface.
+     *
+     * @param OutputInterface $Output The output interface to be set.
+     * @return void
+     */
+    public function setOutput(OutputInterface $Output): void
+    {
+        $this->Output = $Output;
     }
 
     /**
@@ -103,7 +120,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         if (!defined('PHP_BINARY')) {
             $this->phpPath = 'php ';
-            $this->isFCGI  = false;
+            $this->isFCGI = false;
 
             return $this->phpPath;
         }
@@ -156,7 +173,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $package = preg_replace('#([ ]){2,}#', "$1", $package);
             $package = explode(' ', $package);
 
-            $name    = $package[0];
+            $name = $package[0];
             $version = $package[1];
 
             $result[$name] = $version;
@@ -249,7 +266,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $output = $this->execComposer('outdated', $options);
 
-        $packages       = [];
+        $packages = [];
         $completeOutput = implode("\n", $output);
 
         // find exeption
@@ -302,8 +319,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $line = str_replace('Reading ', "\nReading ", $line);
 
             if (strpos($line, ' => ') !== false) {
-                $parts    = explode(' (', $line);
-                $package  = $parts[0];
+                $parts = explode(' (', $line);
+                $package = $parts[0];
                 $versions = str_replace(')', '', $parts[1]);
 
                 // old version
@@ -329,11 +346,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
                 // new version
                 $firstSpace = strpos($line[1], ' ');
                 $newVersion = trim(substr($line[1], $firstSpace), '() ');
-                $package    = trim(substr($line[1], 0, $firstSpace));
+                $package = trim(substr($line[1], 0, $firstSpace));
 
                 if (strpos($oldVersion, 'Reading ') !== false) {
                     $packageStart = strpos($line[0], $package);
-                    $line[0]      = substr($line[0], $packageStart);
+                    $line[0] = substr($line[0], $packageStart);
 
                     $firstSpace = strpos($line[0], ' ');
                     $oldVersion = trim(substr($line[0], $firstSpace), '() ');
@@ -345,8 +362,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             $result[$package] = [
-                'package'    => $package,
-                'version'    => $newVersion,
+                'package' => $package,
+                'version' => $newVersion,
                 'oldVersion' => $oldVersion
             ];
         }
@@ -447,15 +464,16 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             return [];
         }
 
-        $regex    = "~ +~";
+        $regex = "~ +~";
         $packages = [];
 
         foreach ($output as $line) {
             // Replace all spaces (multiple or single) by a single space
-            $line  = preg_replace($regex, " ", $line);
+            $line = preg_replace($regex, " ", $line);
             $words = explode(" ", $line);
 
-            if ($words[0] != ""
+            if (
+                $words[0] != ""
                 && !empty($words[0])
                 && substr($words[0], 0, 1) != chr(8)
                 && $words[0] != "Reading"
@@ -526,13 +544,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
             preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches);
 
-            if (!isset($matches[1]) || !isset($matches[1]) || !isset($matches[1])) {
+            if (!isset($matches[1]) || !isset($matches[2]) || !isset($matches[5])) {
                 continue;
             }
 
             $result[] = [
-                "package"    => $matches[1],
-                "version"    => $matches[2],
+                "package" => $matches[1],
+                "version" => $matches[2],
                 "constraint" => $matches[5],
             ];
         }
@@ -544,12 +562,12 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Execute the composer shell command (system())
      *
      * @param $cmd - The command that should be executed
-     * @param $options - Array of commandline paramters. Format : array(option => value)
-     * @param $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     * @param array $options - Array of commandline paramters. Format : array(option => value)
+     * @param array $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
      *
      * @throws Exception
      */
-    protected function systemComposer($cmd, $options = [], $tokens = [])
+    protected function systemComposer($cmd, array $options = [], array $tokens = [])
     {
         $packages = [];
 
@@ -607,14 +625,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Execute the composer shell command
      *
      * @param $cmd - The command that should be executed
-     * @param $options - Array of commandline paramters. Format : array(option => value)
-     * @param $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     * @param array $options - Array of commandline paramters. Format : array(option => value)
+     * @param array $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
      *
      * @return array
      *
      * @throws Exception
      */
-    protected function execComposer($cmd, $options = [], $tokens = []): array
+    protected function execComposer($cmd, array $options = [], array $tokens = []): array
     {
         $packages = [];
 
@@ -766,7 +784,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     protected function runProcess(string $cmd): array
     {
-        $self   = $this;
+        $self = $this;
         $output = '';
 
         $cmd = str_replace("'", '', $cmd);
@@ -786,9 +804,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $Process->wait();
 
         return [
-            'Process'    => $Process,
+            'Process' => $Process,
             'successful' => $Process->isSuccessful(),
-            'output'     => $output
+            'output' => $output
         ];
     }
 
