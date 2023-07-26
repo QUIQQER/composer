@@ -1,11 +1,11 @@
 <?php
+
 /**
  * This File contains QUI\Composer\ArrayOutput
  */
 
 namespace QUI\Composer;
 
-use SebastianBergmann\CodeCoverage\Report\PHP;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Output\Output;
 
