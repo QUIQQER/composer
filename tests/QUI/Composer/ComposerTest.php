@@ -6,28 +6,27 @@ use PHPUnit\Framework\TestCase;
 
 class ComposerTest extends TestCase
 {
-
     private $workingDir;
     private $composerDir;
     private $mode = ComposerTest::MODE_WEB;
 
     private $testPackages = array(
-        'testRequire'  => array(
-            'name'    => "psr/log",
+        'testRequire' => array(
+            'name' => "psr/log",
             'version' => "1.0.0"
         ),
         'testOutdated' => array(
-            'name'    => "sebastian/version",
+            'name' => "sebastian/version",
             'version' => "1.0.0"
         ),
-        'testUpdate'   => array(
-            'name'     => "sebastian/version",
-            'version'  => "1.0.0",
+        'testUpdate' => array(
+            'name' => "sebastian/version",
+            'version' => "1.0.0",
             'version2' => "1.0.6"
         ),
-        'default'      => array(
-            'name'     => "sebastian/version",
-            'version'  => "1.0.0",
+        'default' => array(
+            'name' => "sebastian/version",
+            'version' => "1.0.0",
             'version2' => "1.0.6"
         )
     );
@@ -43,7 +42,7 @@ class ComposerTest extends TestCase
     public function setUp()
     {
         parent::setUp();
-        $this->workingDir  = "/tmp/composerTest/" . md5(date("dmYHis") . mt_rand(0, 10000000));
+        $this->workingDir = "/tmp/composerTest/" . md5(date("dmYHis") . mt_rand(0, 10000000));
         $this->composerDir = $this->workingDir . "/composer/";
 
 
@@ -219,7 +218,7 @@ class ComposerTest extends TestCase
         # ===================
 
         # Check if correct version is in composer.json
-        $data    = json_decode($json, true);
+        $data = json_decode($json, true);
         $require = $data['require'];
         $this->assertArrayHasKey($this->testPackages['testUpdate']['name'], $require);
         $this->assertEquals(
@@ -228,8 +227,8 @@ class ComposerTest extends TestCase
         );
 
         #Check if correct version is in composer.lock
-        $json     = file_get_contents($this->workingDir . "/composer.lock");
-        $data     = json_decode($json, true);
+        $json = file_get_contents($this->workingDir . "/composer.lock");
+        $data = json_decode($json, true);
         $packages = $data['packages'];
 
 
@@ -240,7 +239,7 @@ class ComposerTest extends TestCase
             $name = $pckg['name'];
             if ($name == $this->testPackages['testUpdate']['name']) {
                 $containsPackage = true;
-                $index           = $i;
+                $index = $i;
             }
         }
         $this->assertTrue($containsPackage);
@@ -273,14 +272,16 @@ class ComposerTest extends TestCase
 
     public function testInstall()
     {
-
         $Composer = $this->getComposer();
 
-        $this->assertFileNotExists($this->workingDir."/vendor/composer/composer/src/Composer/Composer.php", "This file must not exist, because the test will check if it will get created.");
+        $this->assertFileNotExists(
+            $this->workingDir . "/vendor/composer/composer/src/Composer/Composer.php",
+            "This file must not exist, because the test will check if it will get created."
+        );
 
         $Composer->install();
 
-        $this->assertFileExists($this->workingDir."/vendor/composer/composer/src/Composer/Composer.php");
+        $this->assertFileExists($this->workingDir . "/vendor/composer/composer/src/Composer/Composer.php");
     }
     # =============================================
     # Helper
@@ -292,7 +293,10 @@ class ComposerTest extends TestCase
         switch ($this->mode) {
             case self::MODE_AUTO:
                 $Composer = new \QUI\Composer\Composer($this->workingDir, $this->composerDir);
-                $this->writePHPUnitLog("Using Composer in " . ($Composer->getMode() == \QUI\Composer\Composer::MODE_CLI ? "CLI" : "Web") . " mode.");
+                $this->writePHPUnitLog(
+                    "Using Composer in " . ($Composer->getMode(
+                    ) == \QUI\Composer\Composer::MODE_CLI ? "CLI" : "Web") . " mode."
+                );
                 break;
             case self::MODE_WEB:
                 $Composer = new \QUI\Composer\Web($this->workingDir);

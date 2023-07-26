@@ -8,6 +8,12 @@ namespace QUI\Composer\Utils;
 
 use QUI;
 
+use function call_user_func_array;
+use function is_string;
+use function preg_replace;
+use function strpos;
+use function usort;
+
 /**
  * Events Handling
  * Extends a class with the events interface
@@ -22,19 +28,19 @@ class Events
      *
      * @var array
      */
-    protected $events = [];
+    protected array $events = [];
 
     /**
      * @var array
      */
-    protected $currentRunning = [];
+    protected array $currentRunning = [];
 
     /**
      * (non-PHPdoc)
      *
      * @see \QUI\Interfaces\Events::getList()
      */
-    public function getList()
+    public function getList(): array
     {
         return $this->events;
     }
@@ -48,7 +54,7 @@ class Events
      * @see \QUI\Interfaces\Events::addEvent()
      *
      */
-    public function addEvent($event, $fn, $priority = 0)
+    public function addEvent(string $event, callable $fn, int $priority = 0)
     {
         if (!isset($this->events[$event])) {
             $this->events[$event] = [];
@@ -89,7 +95,7 @@ class Events
      * @see \QUI\Interfaces\Events::removeEvent()
      *
      */
-    public function removeEvent($event, $fn = false)
+    public function removeEvent(string $event, $fn = false)
     {
         if (!isset($this->events[$event])) {
             return;
@@ -136,17 +142,18 @@ class Events
      * @see \QUI\Interfaces\Events::fireEvent()
      *
      */
-    public function fireEvent($event, $args = false, $force = false)
+    public function fireEvent(string $event, $args = false, bool $force = false): array
     {
         $results = [];
 
-        if (\strpos($event, 'on') !== 0) {
-            $event = 'on'.\ucfirst($event);
+        if (strpos($event, 'on') !== 0) {
+            $event = 'on' . \ucfirst($event);
         }
 
 
         // recursion check
-        if (isset($this->currentRunning[$event])
+        if (
+            isset($this->currentRunning[$event])
             && $this->currentRunning[$event]
             && $force === false
         ) {
@@ -159,11 +166,11 @@ class Events
 
         $this->currentRunning[$event] = true;
 
-        $Stack  = new QUI\ExceptionStack();
+        $Stack = new QUI\ExceptionStack();
         $events = $this->events[$event];
 
         // sort
-        \usort($events, function ($a, $b) {
+        usort($events, function ($a, $b) {
             if ($a['priority'] == $b['priority']) {
                 return 0;
             }
@@ -176,29 +183,29 @@ class Events
             $fn = $data['callable'];
 
             try {
-                if (!\is_string($fn)) {
+                if (!is_string($fn)) {
                     if ($args === false) {
                         $fn();
                         continue;
                     }
 
-                    \call_user_func_array($fn, $args);
+                    call_user_func_array($fn, $args);
                     continue;
                 }
 
-                $fn = \preg_replace('/[\\\\]{2,}/', '\\', $fn);
+                $fn = preg_replace('/[\\\\]{2,}/', '\\', $fn);
 
                 if ($args === false) {
                     $results[$fn] = \call_user_func($fn);
                     continue;
                 }
 
-                $results[$fn] = \call_user_func_array($fn, $args);
+                $results[$fn] = call_user_func_array($fn, $args);
             } catch (QUI\Exception $Exception) {
                 $message = $Exception->getMessage();
 
-                if (\is_string($fn)) {
-                    $message .= ' :: '.$fn;
+                if (is_string($fn)) {
+                    $message .= ' :: ' . $fn;
                 }
 
                 $Clone = new QUI\Exception(
@@ -211,8 +218,8 @@ class Events
             } catch (\Exception $Exception) {
                 $message = $Exception->getMessage();
 
-                if (\is_string($fn)) {
-                    $message .= ' :: '.$fn;
+                if (is_string($fn)) {
+                    $message .= ' :: ' . $fn;
                 }
 
                 $Clone = new QUI\Exception(
