@@ -6,6 +6,9 @@
 
 namespace QUI\Composer\Interfaces;
 
+use QUI\Composer\Exception;
+use Symfony\Component\Console\Output\OutputInterface;
+
 /**
  * Interface Composer
  *
@@ -16,10 +19,18 @@ interface ComposerInterface
     /**
      * Composer constructor.
      *
-     * @param string $workingDir - The workingdirectory for composer (Directory, which contains the composer.json)
+     * @param string $workingDir - The working directory for composer (Directory, which contains the composer.json)
      * @throws \Exception
      */
     public function __construct(string $workingDir);
+
+    /**
+     * Sets the output interface.
+     *
+     * @param OutputInterface $Output The output interface to be set.
+     * @return void
+     */
+    public function setOutput(OutputInterface $Output): void;
 
     /**
      * Unmute the execution
@@ -121,7 +132,7 @@ interface ComposerInterface
      *
      * @return array
      *
-     * @throws \QUI\Composer\Exception
+     * @throws Exception
      */
     public function getOutdatedPackages(): array;
 
