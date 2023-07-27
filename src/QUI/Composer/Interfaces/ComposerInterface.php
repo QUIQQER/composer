@@ -61,6 +61,15 @@ interface ComposerInterface
     public function update(array $options = []): array;
 
     /**
+     * Executes the Composer command with the specified options.
+     *
+     * @param string $command The Composer command to execute.
+     * @param array $options An optional array of options to pass to the Composer command.
+     * @return array The output of the Composer command as an array.
+     */
+    public function executeComposer(string $command, array $options = []): array;
+
+    /**
      * Executes the composer require command
      *
      * @param string|array $package

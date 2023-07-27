@@ -622,6 +622,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * @throws Exception
+     */
+    public function executeComposer(string $command, array $options = []): array
+    {
+        return $this->execComposer($command, $options);
+    }
+
+    /**
      * Execute the composer shell command
      *
      * @param $cmd - The command that should be executed
