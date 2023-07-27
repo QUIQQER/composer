@@ -600,14 +600,14 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Execute the composer
      *
-     * @param       $command
+     * @param string $command
      * @param array $options
      *
      * @return array
      *
      * @throws Exception
      */
-    protected function executeComposer($command, array $options = []): array
+    public function executeComposer(string $command, array $options = []): array
     {
         $this->resetComposer();
 

@@ -92,6 +92,18 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
+     * Executes a Composer command with given options and returns the result as an array.
+     *
+     * @param string $command The Composer command to execute.
+     * @param array $options (Optional) The options to be passed to the Composer command.
+     * @return array The result of executing the Composer command as an array.
+     */
+    public function executeComposer(string $command, array $options = []): array
+    {
+        return $this->Runner->executeComposer($command, $options);
+    }
+
+    /**
      * Set the composer mode
      * CLI, or web
      *
