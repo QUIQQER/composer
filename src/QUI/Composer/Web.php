@@ -22,10 +22,6 @@ use function is_array;
 use function is_dir;
 use function is_string;
 use function json_decode;
-use function ob_end_clean;
-use function ob_get_clean;
-use function ob_get_contents;
-use function ob_start;
 use function pathinfo;
 use function preg_match;
 use function preg_replace;
@@ -621,18 +617,12 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $Input = new ArrayInput($params);
         $Output = $this->Output ?? new ArrayOutput();
 
-        ob_start();
         $code = $this->Application->run($Input, $Output);
 
         if ($code !== 0) {
             throw new Exception('Something went wrong', $code, [
                 'output' => $Output->getLines()
             ]);
-        }
-
-        if (ob_get_contents()) {
-            ob_get_clean();
-            ob_end_clean();
         }
 
         $output = $Output->getLines();
