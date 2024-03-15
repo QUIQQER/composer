@@ -6,12 +6,14 @@
 
 namespace QUI\Composer\Utils;
 
+use Exception;
 use QUI;
 
+use function call_user_func;
 use function call_user_func_array;
 use function is_string;
 use function preg_replace;
-use function strpos;
+use function ucfirst;
 use function usort;
 
 /**
@@ -36,9 +38,7 @@ class Events
     protected array $currentRunning = [];
 
     /**
-     * (non-PHPdoc)
-     *
-     * @see \QUI\Interfaces\Events::getList()
+     * @see QUI\Interfaces\Events::getList
      */
     public function getList(): array
     {
@@ -46,15 +46,13 @@ class Events
     }
 
     /**
-     * (non-PHPdoc)
-     *
      * @param string $event - The type of event (e.g. 'complete').
      * @param callable $fn - The function to execute.
      * @param int $priority - optional, Priority of the event
-     * @see \QUI\Interfaces\Events::addEvent()
+     * @see QUI\Interfaces\Events::addEvent
      *
      */
-    public function addEvent(string $event, callable $fn, int $priority = 0)
+    public function addEvent(string $event, callable $fn, int $priority = 0): void
     {
         if (!isset($this->events[$event])) {
             $this->events[$event] = [];
@@ -74,13 +72,11 @@ class Events
     }
 
     /**
-     * (non-PHPdoc)
-     *
      * @param array $events
-     * @see \QUI\Interfaces\Events::addEvents()
+     * @see QUI\Interfaces\Events::addEvents
      *
      */
-    public function addEvents(array $events)
+    public function addEvents(array $events): void
     {
         foreach ($events as $event => $fn) {
             $this->addEvent($event, $fn);
@@ -88,14 +84,12 @@ class Events
     }
 
     /**
-     * (non-PHPdoc)
-     *
      * @param string $event - The type of event (e.g. 'complete').
      * @param callable|boolean $fn - (optional) The function to remove.
-     * @see \QUI\Interfaces\Events::removeEvent()
+     * @see QUI\Interfaces\Events::removeEvent
      *
      */
-    public function removeEvent(string $event, $fn = false)
+    public function removeEvent(string $event, callable|bool $fn = false): void
     {
         if (!isset($this->events[$event])) {
             return;
@@ -115,13 +109,11 @@ class Events
     }
 
     /**
-     * (non-PHPdoc)
-     *
      * @param array $events - (optional) If not passed removes all events of all types.
-     * @see \QUI\Interfaces\Events::removeEvents()
+     * @see QUI\Interfaces\Events::removeEvents
      *
      */
-    public function removeEvents(array $events)
+    public function removeEvents(array $events): void
     {
         foreach ($events as $event => $fn) {
             $this->removeEvent($event, $fn);
@@ -129,25 +121,23 @@ class Events
     }
 
     /**
-     * (non-PHPdoc)
-     *
      * @param string $event - The type of event (e.g. 'onComplete').
-     * @param array|boolean $args - (optional) the argument(s) to pass to the function.
+     * @param boolean|array $args - (optional) the argument(s) to pass to the function.
      *                            The arguments must be in an array.
      * @param boolean $force - (optional) no recursion check, optional, default = false
      *
-     * @return array - Event results, assoziative array
+     * @return array - Event results, associative array
      *
      * @throws QUI\ExceptionStack
-     * @see \QUI\Interfaces\Events::fireEvent()
+     * @see QUI\Interfaces\Events::fireEvent
      *
      */
-    public function fireEvent(string $event, $args = false, bool $force = false): array
+    public function fireEvent(string $event, bool|array $args = false, bool $force = false): array
     {
         $results = [];
 
-        if (strpos($event, 'on') !== 0) {
-            $event = 'on' . \ucfirst($event);
+        if (!str_starts_with($event, 'on')) {
+            $event = 'on' . ucfirst($event);
         }
 
 
@@ -196,26 +186,12 @@ class Events
                 $fn = preg_replace('/[\\\\]{2,}/', '\\', $fn);
 
                 if ($args === false) {
-                    $results[$fn] = \call_user_func($fn);
+                    $results[$fn] = call_user_func($fn);
                     continue;
                 }
 
                 $results[$fn] = call_user_func_array($fn, $args);
-            } catch (QUI\Exception $Exception) {
-                $message = $Exception->getMessage();
-
-                if (is_string($fn)) {
-                    $message .= ' :: ' . $fn;
-                }
-
-                $Clone = new QUI\Exception(
-                    $message,
-                    $Exception->getCode(),
-                    ['trace' => $Exception->getTraceAsString()]
-                );
-
-                $Stack->addException($Clone);
-            } catch (\Exception $Exception) {
+            } catch (QUI\Exception|Exception $Exception) {
                 $message = $Exception->getMessage();
 
                 if (is_string($fn)) {

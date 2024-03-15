@@ -35,12 +35,12 @@ interface ComposerInterface
     /**
      * Unmute the execution
      */
-    public function unmute();
+    public function unmute(): void;
 
     /**
      * Mute the execution
      */
-    public function mute();
+    public function mute(): void;
 
     /**
      * Executes the composer install command
@@ -72,7 +72,7 @@ interface ComposerInterface
     /**
      * Executes the composer require command
      *
-     * @param string|array $package
+     * @param array|string $package
      * @param string $version
      * @param array $options
      *
@@ -80,7 +80,7 @@ interface ComposerInterface
      *
      * @internal param array $options - Optional commandline parameters
      */
-    public function requirePackage($package, string $version = "", array $options = []): array;
+    public function requirePackage(array|string $package, string $version = "", array $options = []): array;
 
     /**
      * Gets all outdated packages
@@ -97,7 +97,7 @@ interface ComposerInterface
      *
      * @param bool $direct - If true : Checks only direct requirements
      *
-     * @return bool - true if updates are available, false if everything is up to date
+     * @return bool - true if updates are available, false if everything is up-to-date
      */
     public function updatesAvailable(bool $direct): bool;
 
@@ -115,7 +115,7 @@ interface ComposerInterface
      * @param $needle
      * @param array $options
      *
-     * @return array - Returns an array in the format : array( packagename => description)
+     * @return array - Returns an array in the format : array( package name => description)
      */
     public function search($needle, array $options = []): array;
 

@@ -110,18 +110,18 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * @param int $mode - self::MODE_CLI, self::MODE_WEB
      * @throws Exception
      */
-    public function setMode(int $mode)
+    public function setMode(int $mode): void
     {
         $self = $this;
 
         switch ($mode) {
             case self::MODE_CLI:
-                $this->Runner = new CLI($this->workingDir, $this->composerDir);
+                $this->Runner = new CLI($this->workingDir);
                 $this->mode = self::MODE_CLI;
                 break;
 
             case self::MODE_WEB:
-                $this->Runner = new Web($this->workingDir, $this->composerDir);
+                $this->Runner = new Web($this->workingDir);
                 $this->mode = self::MODE_WEB;
                 break;
         }
@@ -130,7 +130,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
             $self->Events->fireEvent('output', [$self, $output, $type]);
         });
 
-        if ($this->mute()) {
+        if ($this->mute) {
             $this->Runner->mute();
         } else {
             $this->Runner->unmute();
@@ -188,12 +188,12 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes composers require command
      *
-     * @param string|array $package - Name of the package : i.E. 'quiqqer/quiqqer' or list of packages
+     * @param array|string $package - Name of the package : i.E. 'quiqqer/quiqqer' or list of packages
      * @param string $version
      * @param array $options
      * @return array
      */
-    public function requirePackage($package, string $version = "", array $options = []): array
+    public function requirePackage(array|string $package, string $version = "", array $options = []): array
     {
         return $this->Runner->requirePackage($package, $version, $options);
     }
@@ -203,7 +203,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param bool $direct
      * @param array $options
-     * @return array|string
+     * @return array
      */
     public function outdated(bool $direct = false, array $options = []): array
     {
@@ -294,21 +294,19 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Mute the execution
      */
-    public function mute()
+    public function mute(): void
     {
         $this->mute = true;
-
-        return $this->Runner->mute();
+        $this->Runner->mute();
     }
 
     /**
      * Unmute the execution
      */
-    public function unmute()
+    public function unmute(): void
     {
         $this->mute = false;
-
-        return $this->Runner->unmute();
+        $this->Runner->unmute();
     }
 
     /**
@@ -333,7 +331,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * @param callable $fn - The function to execute.
      * @param int $priority - optional, Priority of the event
      */
-    public function addEvent(string $event, callable $fn, int $priority = 0)
+    public function addEvent(string $event, callable $fn, int $priority = 0): void
     {
         $this->Events->addEvent($event, $fn, $priority);
     }

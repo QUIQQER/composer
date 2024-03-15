@@ -6,6 +6,12 @@
 
 namespace QUI\Composer\Utils;
 
+use function ltrim;
+use function str_replace;
+use function strpos;
+use function substr;
+use function trim;
+
 /**
  * Class Parser
  *
@@ -26,36 +32,36 @@ class Parser
             return [];
         }
 
-        $string = \str_replace("\010", '', $string); // remove backspace
-        $string = \trim($string);
+        $string = str_replace("\010", '', $string); // remove backspace
+        $string = trim($string);
 
-        if (\strpos($string, '<warning>You') !== false) {
+        if (str_contains($string, '<warning>You')) {
             return [];
         }
 
-        if (\strpos($string, 'Reading') === 0) {
+        if (str_starts_with($string, 'Reading')) {
             return [];
         }
 
-        if (\strpos($string, 'Failed') === 0) {
+        if (str_starts_with($string, 'Failed')) {
             return [];
         }
 
-        if (\strpos($string, 'Importing') === 0) {
+        if (str_starts_with($string, 'Importing')) {
             return [];
         }
 
         $result = [];
 
         // new version
-        $spacePos    = \strpos($string, ' ');
-        $versionTemp = \trim(\substr($string, $spacePos));
-        $spaceNext   = \strpos($versionTemp, ' ');
+        $spacePos = strpos($string, ' ');
+        $versionTemp = trim(substr($string, $spacePos));
+        $spaceNext = strpos($versionTemp, ' ');
 
-        $result['package'] = \trim(\substr($string, 0, $spacePos));
+        $result['package'] = trim(substr($string, 0, $spacePos));
 
-        $result['version'] = \trim(\substr($versionTemp, 0, $spaceNext));
-        $result['version'] = \ltrim($result['version'], 'v');
+        $result['version'] = trim(substr($versionTemp, 0, $spaceNext));
+        $result['version'] = ltrim($result['version'], 'v');
 
         return $result;
     }

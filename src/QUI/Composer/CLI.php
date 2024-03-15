@@ -52,7 +52,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     protected string $composerDir;
 
     /**
-     * @var string
+     * @var ?string
      */
     protected ?string $phpPath = null;
 
@@ -110,7 +110,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Return the executable php path
      *
-     * @return string
+     * @return ?string
      */
     protected function getPHPPath(): ?string
     {
@@ -136,7 +136,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * All composer execution displays the output
      * composer execution is via system()
      */
-    public function unmute()
+    public function unmute(): void
     {
         $this->directOutput = true;
     }
@@ -146,7 +146,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * All composer execution dont't displays the output
      * composer execution is via exec()
      */
-    public function mute()
+    public function mute(): void
     {
         $this->directOutput = false;
     }
@@ -166,7 +166,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $result = [];
 
         foreach ($packages as $package) {
-            if (strpos($package, '<warning>') === 0) {
+            if (str_starts_with($package, '<warning>')) {
                 continue;
             }
 
@@ -219,13 +219,13 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes the composer require command
      *
-     * @param string|array $package - The package
+     * @param array|string $package - The package
      * @param string $version - The version of the package
      * @param array $options
      *
      * @return array
      */
-    public function requirePackage($package, string $version = "", array $options = []): array
+    public function requirePackage(array|string $package, string $version = "", array $options = []): array
     {
         if (!isset($options['prefer-dist']) && !isset($options['prefer-source'])) {
             $options['prefer-dist'] = true;
@@ -241,7 +241,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         try {
             return $this->runComposer('require', $options);
-        } catch (QUI\Exception $Exception) {
+        } catch (QUI\Exception) {
         }
 
         return [];
@@ -254,7 +254,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param array $options
      *
-     * @return array - Returns false on failure and an array of packagenames on success
+     * @return array - Returns false on failure and an array of package names on success
      *
      * @throws Exception
      */
@@ -270,9 +270,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $completeOutput = implode("\n", $output);
 
         // find exeption
-        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+        if (str_contains($completeOutput, '[RuntimeException]')) {
             foreach ($output as $key => $line) {
-                if (strpos($line, '[RuntimeException]') === false) {
+                if (!str_contains($line, '[RuntimeException]')) {
                     continue;
                 }
 
@@ -308,7 +308,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $result = [];
 
         foreach ($output as $line) {
-            if (strpos($line, '- Updating') === false && strpos($line, '- Upgrading') === false) {
+            if (!str_contains($line, '- Updating') && !str_contains($line, '- Upgrading')) {
                 continue;
             }
 
@@ -318,7 +318,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $line = str_replace('- Upgrading ', '', $line);
             $line = str_replace('Reading ', "\nReading ", $line);
 
-            if (strpos($line, ' => ') !== false) {
+            if (str_contains($line, ' => ')) {
                 $parts = explode(' (', $line);
                 $package = $parts[0];
                 $versions = str_replace(')', '', $parts[1]);
@@ -348,7 +348,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
                 $newVersion = trim(substr($line[1], $firstSpace), '() ');
                 $package = trim(substr($line[1], 0, $firstSpace));
 
-                if (strpos($oldVersion, 'Reading ') !== false) {
+                if (str_contains($oldVersion, 'Reading ')) {
                     $packageStart = strpos($line[0], $package);
                     $line[0] = substr($line[0], $packageStart);
 
@@ -381,8 +381,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     public function updatesAvailable(bool $direct = false): bool
     {
         try {
-            return count($this->outdated($direct)) > 0 ? true : false;
-        } catch (Exception $Exception) {
+            return count($this->outdated($direct)) > 0;
+        } catch (Exception) {
             return false;
         }
     }
@@ -398,7 +398,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     {
         try {
             $this->execComposer('dump-autoload', $options);
-        } catch (Exception $Exception) {
+        } catch (Exception) {
             return false;
         }
 
@@ -417,7 +417,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     {
         try {
             $output = $this->execComposer('search', $options, $needle);
-        } catch (Exception $Exception) {
+        } catch (Exception) {
             return [];
         }
 
@@ -430,11 +430,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $line = str_replace('Reading ', "\nReading ", $line);
             $line = trim($line);
 
-            if (strpos($line, 'Failed to') === 0) {
+            if (str_starts_with($line, 'Failed to')) {
                 continue;
             }
 
-            if (strpos($line, 'Reading ') === 0) {
+            if (str_starts_with($line, 'Reading ')) {
                 continue;
             }
 
@@ -460,7 +460,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     {
         try {
             $output = $this->execComposer('show', $options);
-        } catch (Exception $Exception) {
+        } catch (Exception) {
             return [];
         }
 
@@ -494,7 +494,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     {
         try {
             $this->execComposer('clear-cache');
-        } catch (Exception $Exception) {
+        } catch (Exception) {
             return false;
         }
 
@@ -526,19 +526,19 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $output = $this->execComposer('why', $options);
 
         foreach ($output as $line) {
-            if (strpos($line, 'You') !== false) {
+            if (str_contains($line, 'You')) {
                 continue;
             }
 
-            if (strpos($line, 'Reading') === 0) {
+            if (str_starts_with($line, 'Reading')) {
                 continue;
             }
 
-            if (strpos($line, 'Failed') === 0) {
+            if (str_starts_with($line, 'Failed')) {
                 continue;
             }
 
-            if (strpos($line, 'Importing') === 0) {
+            if (str_starts_with($line, 'Importing')) {
                 continue;
             }
 
@@ -567,7 +567,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @throws Exception
      */
-    protected function systemComposer($cmd, array $options = [], array $tokens = [])
+    protected function systemComposer($cmd, array $options = [], array $tokens = []): void
     {
         $packages = [];
 
@@ -690,11 +690,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $output = $result['output'];
 
         // find exception
-        if (strpos($output, '[RuntimeException]') !== false) {
+        if (str_contains($output, '[RuntimeException]')) {
             $explode = explode(PHP_EOL, $output);
 
             foreach ($explode as $key => $line) {
-                if (strpos($line, '[RuntimeException]') === false) {
+                if (!str_contains($line, '[RuntimeException]')) {
                     continue;
                 }
 
@@ -773,7 +773,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             return $this->isFCGI;
         }
 
-        if (substr(php_sapi_name(), 0, 3) == 'cgi') {
+        if (str_starts_with(php_sapi_name(), 'cgi')) {
             $this->isFCGI = true;
 
             return $this->isFCGI;
@@ -827,7 +827,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * @param callable $fn - The function to execute.
      * @param int $priority - optional, Priority of the event
      */
-    public function addEvent(string $event, callable $fn, int $priority = 0)
+    public function addEvent(string $event, callable $fn, int $priority = 0): void
     {
         $this->Events->addEvent($event, $fn, $priority);
     }
