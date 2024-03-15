@@ -191,7 +191,7 @@ class Events
                 }
 
                 $results[$fn] = call_user_func_array($fn, $args);
-            } catch (QUI\Exception|Exception $Exception) {
+            } catch (Exception $Exception) {
                 $message = $Exception->getMessage();
 
                 if (is_string($fn)) {
