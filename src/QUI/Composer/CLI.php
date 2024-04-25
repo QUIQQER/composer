@@ -231,7 +231,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             $options['prefer-dist'] = true;
         }
 
-        // Build an require string
+        // Build a "require" string
         if (!empty($version) && is_string($package)) {
             $package .= ":" . $version;
         }
@@ -759,7 +759,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Is FastCGI / FCGI enabled?
      *
-     * @return bool
+     * @return ?bool
      */
     protected function isFCGI(): ?bool
     {
@@ -792,7 +792,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      */
     protected function runProcess(string $cmd): array
     {
-        $self = $this;
         $output = '';
 
         $cmd = str_replace("'", '', $cmd);
@@ -804,7 +803,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $Process = new Process($cmd);
         $Process->setTimeout(0);
 
-        $Process->run(function ($type, $data) use ($self, &$output) {
+        $Process->run(function ($type, $data) use (&$output) {
+            $self = $this;
             $output .= $data;
             $self->Events->fireEvent('output', [$self, $data, $type]);
         });

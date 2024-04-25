@@ -5,9 +5,9 @@
   "license": "GPL-3.0-or-later",
   "authors": [
     {
-      "name": "Florian Bogner",
-      "email": "f.bogner@pcsg.de",
-      "homepage": "http:\/\/www.pcsg.de",
+      "name": "PCSG - Computer & Internet Service OHG",
+      "email": "info@quiqqer.com",
+      "homepage": "https://www.pcsg.de",
       "role": "Developer"
     }
   ],
@@ -15,17 +15,11 @@
     "email": "support@pcsg.de",
     "url": "http:\/\/www.pcsg.de"
   },
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "https:\/\/update.quiqqer.com\/"
-    }
-  ],
   "require": {
     "php": "^8.1",
-    "composer\/composer": "1.9.*|2.*",
-    "symfony\/process": "*",
-    "quiqqer\/utils": ">=1|dev-master|dev-dev"
+    "composer\/composer": "^1.9|^2",
+    "symfony\/process": "^6",
+    "quiqqer\/utils": "^1"
   },
   "autoload": {
     "psr-4": {

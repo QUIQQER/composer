@@ -26,7 +26,7 @@ class Parser
      * @param $string
      * @return array
      */
-    public static function parsePackageLineToArray($string)
+    public static function parsePackageLineToArray($string): array
     {
         if (empty($string)) {
             return [];
