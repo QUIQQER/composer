@@ -45,7 +45,7 @@ class ArrayOutput extends Output
      * @param string $message - The message that should be written
      * @param bool $newline - true, if the current line should be finished.
      */
-    protected function doWrite($message, $newline)
+    protected function doWrite($message, $newline): void
     {
         $this->curLine .= $message;
 
@@ -74,7 +74,7 @@ class ArrayOutput extends Output
     /**
      * Clears all lines of the output
      */
-    public function clearLines()
+    public function clearLines(): void
     {
         $this->lines = [];
     }

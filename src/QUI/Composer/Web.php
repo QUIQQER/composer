@@ -3,6 +3,7 @@
 namespace QUI\Composer;
 
 use Composer\Console\Application;
+use Exception;
 use QUI;
 use QUI\Composer\Utils\Events;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -87,17 +88,12 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             define('STDIN', fopen("php://stdin", "r"));
         }
 
-        if (empty($composerDir)) {
-            $this->composerDir = rtrim($workingDir, '/') . '/';
-        } else {
-            $this->composerDir = rtrim($composerDir, '/') . '/';
-        }
-
         $this->Events = new QUI\Composer\Utils\Events();
+        $this->composerDir = rtrim($workingDir, '/') . '/';
         $this->workingDir = rtrim($workingDir, "/") . '/';
 
         if (!is_dir($workingDir)) {
-            throw new Exception("Workingdirectory does not exist", 404);
+            throw new Exception("Working directory does not exist", 404);
         }
 
         if (!file_exists($this->composerDir . "composer.json")) {
@@ -135,14 +131,14 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Do nothing, because the direct class execution makes no direct output
      */
-    public function unmute()
+    public function unmute(): void
     {
     }
 
     /**
      * Do nothing, because the direct class execution makes no direct output
      */
-    public function mute()
+    public function mute(): void
     {
     }
 
@@ -161,7 +157,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $result = [];
 
         foreach ($packages as $package) {
-            if (strpos($package, '<warning>') === 0) {
+            if (str_starts_with($package, '<warning>')) {
                 continue;
             }
 
@@ -214,14 +210,14 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer require
      *
-     * @param string|array $package - The package name
+     * @param array|string $package - The package name
      * @param string $version - The package version
      * @param array $options
      *
      * @return array
      * @throws Exception
      */
-    public function requirePackage($package, string $version = "", array $options = []): array
+    public function requirePackage(array|string $package, string $version = "", array $options = []): array
     {
         if (!isset($options['prefer-dist']) && !isset($options['prefer-source'])) {
             $options['--prefer-dist'] = true;
@@ -281,19 +277,19 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
         // look for the packages within the composer outpu
         foreach ($result as $line) {
-            if (strpos($line, '<warning>You') !== false) {
+            if (str_contains($line, '<warning>You')) {
                 continue;
             }
 
-            if (strpos($line, 'Reading') === 0) {
+            if (str_starts_with($line, 'Reading')) {
                 continue;
             }
 
-            if (strpos($line, 'Failed') === 0) {
+            if (str_starts_with($line, 'Failed')) {
                 continue;
             }
 
-            if (strpos($line, 'Importing') === 0) {
+            if (str_starts_with($line, 'Importing')) {
                 continue;
             }
 
@@ -331,7 +327,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $result = [];
 
         foreach ($output as $line) {
-            if (strpos($line, '- Updating') === false && strpos($line, '- Upgrading') === false) {
+            if (!str_contains($line, '- Updating') && !str_contains($line, '- Upgrading')) {
                 continue;
             }
 
@@ -340,7 +336,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $line = str_replace('- Updating ', '', $line);
             $line = str_replace('- Upgrading ', '', $line);
 
-            if (strpos($line, ' => ') !== false) {
+            if (str_contains($line, ' => ')) {
                 $parts = explode(' (', $line);
                 $package = $parts[0];
                 $versions = str_replace(')', '', $parts[1]);
@@ -370,7 +366,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
                 $newVersion = trim(substr($line[1], $firstSpace), '() ');
                 $package = trim(substr($line[1], 0, $firstSpace));
 
-                if (strpos($oldVersion, 'Reading ') !== false) {
+                if (str_contains($oldVersion, 'Reading ')) {
                     $packageStart = strpos($line[0], $package);
                     $line[0] = substr($line[0], $packageStart);
 
@@ -433,21 +429,21 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $line = trim($line);
 
             if (
-                strpos($line, 'Reading ') === 0
-                || strpos($line, 'Failed to') === 0
-                || strpos($line, 'Executing command ') === 0
-                || strpos($line, 'Executing branch ') === 0
-                || strpos($line, 'Importing branch ') === 0
-                || strpos($line, 'Loading config file ') === 0
-                || strpos($line, 'Changed CWD to ') === 0
-                || strpos($line, 'Checked CA file ') === 0
-                || strpos($line, 'Loading plugin ') === 0
-                || strpos($line, 'Running ') === 0
+                str_starts_with($line, 'Reading ')
+                || str_starts_with($line, 'Failed to')
+                || str_starts_with($line, 'Executing command ')
+                || str_starts_with($line, 'Executing branch ')
+                || str_starts_with($line, 'Importing branch ')
+                || str_starts_with($line, 'Loading config file ')
+                || str_starts_with($line, 'Changed CWD to ')
+                || str_starts_with($line, 'Checked CA file ')
+                || str_starts_with($line, 'Loading plugin ')
+                || str_starts_with($line, 'Running ')
             ) {
                 continue;
             }
 
-            if (strpos($line, 'Writing ') === 0 && strpos($line, 'into cache') !== false) {
+            if (str_starts_with($line, 'Writing ') && str_contains($line, 'into cache')) {
                 continue;
             }
 
@@ -502,7 +498,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Clears the composer cache
      *
      * @return bool - true on success; false on failure
-     * @throws \Exception
+     * @throws Exception
      */
     public function clearCache(): bool
     {
@@ -552,19 +548,19 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $output = $this->executeComposer('why', $options);
 
         foreach ($output as $line) {
-            if (strpos($line, '<warning>You') !== false) {
+            if (str_contains($line, '<warning>You')) {
                 continue;
             }
 
-            if (strpos($line, 'Reading') === 0) {
+            if (str_starts_with($line, 'Reading')) {
                 continue;
             }
 
-            if (strpos($line, 'Failed') === 0) {
+            if (str_starts_with($line, 'Failed')) {
                 continue;
             }
 
-            if (strpos($line, 'Importing') === 0) {
+            if (str_starts_with($line, 'Importing')) {
                 continue;
             }
 
@@ -587,7 +583,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Resets composer to avoid caching issues.
      */
-    protected function resetComposer()
+    protected function resetComposer(): void
     {
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
@@ -631,7 +627,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         // find exception
         $throwExceptionType = function ($exceptionType) use ($output) {
             foreach ($output as $key => $line) {
-                if (strpos($line, $exceptionType) === false) {
+                if (!str_contains($line, $exceptionType)) {
                     continue;
                 }
 
@@ -639,15 +635,15 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             }
         };
 
-        if (strpos($completeOutput, '[RuntimeException]') !== false) {
+        if (str_contains($completeOutput, '[RuntimeException]')) {
             $throwExceptionType('[RuntimeException]');
         }
 
-        if (strpos($completeOutput, '[Symfony\Component\Console\Exception\InvalidArgumentException]') !== false) {
+        if (str_contains($completeOutput, '[Symfony\Component\Console\Exception\InvalidArgumentException]')) {
             $throwExceptionType('[Symfony\Component\Console\Exception\InvalidArgumentException]');
         }
 
-        if (strpos($completeOutput, '[ErrorException]') !== false) {
+        if (str_contains($completeOutput, '[ErrorException]')) {
             $throwExceptionType('[ErrorException]');
         }
 
@@ -663,7 +659,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @param callable $fn - The function to execute.
      * @param int $priority - optional, Priority of the event
      */
-    public function addEvent(string $event, callable $fn, int $priority = 0)
+    public function addEvent(string $event, callable $fn, int $priority = 0): void
     {
         $this->Events->addEvent($event, $fn, $priority);
     }
