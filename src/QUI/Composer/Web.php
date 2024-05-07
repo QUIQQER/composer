@@ -615,6 +615,19 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $code = $this->Application->run($Input, $Output);
 
         if ($code !== 0) {
+            $lines = $Output->getLines();
+
+            foreach ($lines as $key => $line) {
+                if (str_contains($line, 'Exception')
+                    && str_contains($line, '[')
+                    && str_contains($line, ']')
+                ) {
+                    throw new QUI\Exception(
+                        trim($lines[$key + 1]) . trim($lines[$key + 2])
+                    );
+                }
+            }
+
             throw new QUI\Exception('Something went wrong', $code, [
                 'output' => $Output->getLines()
             ]);
