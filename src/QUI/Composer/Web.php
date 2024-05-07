@@ -618,7 +618,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             $lines = $Output->getLines();
 
             foreach ($lines as $key => $line) {
-                if (str_contains($line, 'Exception')
+                if (
+                    str_contains($line, 'Exception')
                     && str_contains($line, '[')
                     && str_contains($line, ']')
                 ) {
