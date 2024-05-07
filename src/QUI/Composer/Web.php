@@ -594,10 +594,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param string $command
      * @param array $options
-     *
      * @return array
      *
-     * @throws Exception
+     * @throws QUI\Exception
      */
     public function executeComposer(string $command, array $options = []): array
     {
@@ -616,7 +615,21 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $code = $this->Application->run($Input, $Output);
 
         if ($code !== 0) {
-            throw new Exception('Something went wrong', $code, [
+            $lines = $Output->getLines();
+
+            foreach ($lines as $key => $line) {
+                if (
+                    str_contains($line, 'Exception')
+                    && str_contains($line, '[')
+                    && str_contains($line, ']')
+                ) {
+                    throw new QUI\Exception(
+                        trim($lines[$key + 1]) . trim($lines[$key + 2])
+                    );
+                }
+            }
+
+            throw new QUI\Exception('Something went wrong', $code, [
                 'output' => $Output->getLines()
             ]);
         }
@@ -631,7 +644,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
                     continue;
                 }
 
-                throw new Exception($output[$key + 1]);
+                throw new QUI\Exception($output[$key + 1]);
             }
         };
 
