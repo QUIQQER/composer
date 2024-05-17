@@ -21,7 +21,7 @@ class Parser
 {
     /**
      * Parses a package line to an array
-     * eq: quiqqer/quiqqer               dev-dev 0572859      dev-dev 5dcea72    A modular based management
+     * eq: quiqqer/core               dev-dev 0572859      dev-dev 5dcea72    A modular based management
      *
      * @param $string
      * @return array
