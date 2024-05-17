@@ -188,7 +188,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes composers require command
      *
-     * @param array|string $package - Name of the package : i.E. 'quiqqer/quiqqer' or list of packages
+     * @param array|string $package - Name of the package : i.E. 'quiqqer/core' or list of packages
      * @param string $version
      * @param array $options
      * @return array
