@@ -5,3 +5,5 @@ checklist.md5
 test.php
 
 tools/
+
+phpstan.neon
