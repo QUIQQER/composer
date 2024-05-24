@@ -3,3 +3,5 @@ checklist.md5
 /composer.lock
 /.idea
 test.php
+
+tools/
