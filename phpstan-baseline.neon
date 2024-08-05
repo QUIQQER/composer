@@ -1,0 +1,21 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^PHPDoc tag @var for property QUI\\\\Composer\\\\CLI\\:\\:\\$Output with type mixed is not subtype of native type Symfony\\\\Component\\\\Console\\\\Output\\\\OutputInterface\\|null\\.$#"
+			count: 1
+			path: src/QUI/Composer/CLI.php
+
+		-
+			message: "#^Call to an undefined method QUI\\\\Composer\\\\Interfaces\\\\ComposerInterface\\:\\:addEvent\\(\\)\\.$#"
+			count: 1
+			path: src/QUI/Composer/Composer.php
+
+		-
+			message: "#^Call to an undefined method QUI\\\\Composer\\\\Interfaces\\\\ComposerInterface\\:\\:getVersions\\(\\)\\.$#"
+			count: 1
+			path: src/QUI/Composer/Composer.php
+
+		-
+			message: "#^Call to an undefined method Symfony\\\\Component\\\\Console\\\\Output\\\\OutputInterface\\:\\:getLines\\(\\)\\.$#"
+			count: 3
+			path: src/QUI/Composer/Web.php
