@@ -89,7 +89,7 @@ class Events
      * @see QUI\Interfaces\Events::removeEvent
      *
      */
-    public function removeEvent(string $event, callable|bool $fn = false): void
+    public function removeEvent(string $event, callable | bool $fn = false): void
     {
         if (!isset($this->events[$event])) {
             return;
@@ -132,7 +132,7 @@ class Events
      * @see QUI\Interfaces\Events::fireEvent
      *
      */
-    public function fireEvent(string $event, bool|array $args = false, bool $force = false): array
+    public function fireEvent(string $event, bool | array $args = false, bool $force = false): array
     {
         $results = [];
 

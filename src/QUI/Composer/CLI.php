@@ -72,7 +72,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     protected Events $Events;
 
     /**
-     * @var mixed $Output
+     * @var ?OutputInterface $Output
      */
     protected ?OutputInterface $Output = null;
 
@@ -225,7 +225,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @return array
      */
-    public function requirePackage(array|string $package, string $version = "", array $options = []): array
+    public function requirePackage(array | string $package, string $version = "", array $options = []): array
     {
         if (!isset($options['prefer-dist']) && !isset($options['prefer-source'])) {
             $options['prefer-dist'] = true;
