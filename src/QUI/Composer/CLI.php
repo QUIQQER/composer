@@ -72,7 +72,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     protected Events $Events;
 
     /**
-     * @var mixed $Output
+     * @var ?OutputInterface $Output
      */
     protected ?OutputInterface $Output = null;
 

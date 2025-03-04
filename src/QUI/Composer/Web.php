@@ -615,7 +615,11 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $code = $this->Application->run($Input, $Output);
 
         if ($code !== 0) {
-            $lines = $Output->getLines();
+            $lines = [];
+
+            if (method_exists($Output, 'getLines')) {
+                $lines = $Output->getLines();
+            }
 
             foreach ($lines as $key => $line) {
                 if (
@@ -630,11 +634,16 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             throw new QUI\Exception('Something went wrong', $code, [
-                'output' => $Output->getLines()
+                'output' => $lines
             ]);
         }
 
-        $output = $Output->getLines();
+        $output = [];
+
+        if (method_exists($Output, 'getLines')) {
+            $output = $Output->getLines();
+        }
+
         $completeOutput = implode("\n", $output);
 
         // find exception

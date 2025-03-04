@@ -126,9 +126,11 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
                 break;
         }
 
-        $this->Runner->addEvent('onOutput', function ($Runner, $output, $type) use ($self) {
-            $self->Events->fireEvent('output', [$self, $output, $type]);
-        });
+        if (method_exists($this->Runner, 'addEvent')) {
+            $this->Runner->addEvent('onOutput', function ($Runner, $output, $type) use ($self) {
+                $self->Events->fireEvent('output', [$self, $output, $type]);
+            });
+        }
 
         if ($this->mute) {
             $this->Runner->mute();
@@ -152,7 +154,11 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function getVersions(): array
     {
-        return $this->Runner->getVersions();
+        if (method_exists($this->Runner, 'getVersions')) {
+            return $this->Runner->getVersions();
+        }
+
+        return [];
     }
 
     /**
