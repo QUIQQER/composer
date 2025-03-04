@@ -80,7 +80,7 @@ interface ComposerInterface
      *
      * @internal param array $options - Optional commandline parameters
      */
-    public function requirePackage(array|string $package, string $version = "", array $options = []): array;
+    public function requirePackage(array | string $package, string $version = "", array $options = []): array;
 
     /**
      * Gets all outdated packages
