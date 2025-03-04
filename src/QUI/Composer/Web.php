@@ -217,7 +217,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * @return array
      * @throws Exception
      */
-    public function requirePackage(array|string $package, string $version = "", array $options = []): array
+    public function requirePackage(array | string $package, string $version = "", array $options = []): array
     {
         if (!isset($options['prefer-dist']) && !isset($options['prefer-source'])) {
             $options['--prefer-dist'] = true;

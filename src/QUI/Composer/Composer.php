@@ -193,7 +193,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * @param array $options
      * @return array
      */
-    public function requirePackage(array|string $package, string $version = "", array $options = []): array
+    public function requirePackage(array | string $package, string $version = "", array $options = []): array
     {
         return $this->Runner->requirePackage($package, $version, $options);
     }
