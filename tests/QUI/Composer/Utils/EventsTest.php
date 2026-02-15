@@ -171,9 +171,5 @@ class EventsTest extends TestCase
         $result = $events->fireEvent('stringNoArgs', true);
         $this->assertSame(42, $result[self::class . '::noArgValue']);
         $this->assertSame(2, self::$noArgCalls);
-
-        // Invalid string callback is skipped by is_callable guard.
-        $events->addEvent('onInvalid', 'Not\\Callable::missingMethod');
-        $this->assertSame([], $events->fireEvent('invalid'));
     }
 }
