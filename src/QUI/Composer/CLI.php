@@ -36,8 +36,6 @@ use const PHP_EOL;
 /**
  * Class CLI
  * Composer execution into the shell / cli
- *
- * @package QUI\Composer
  */
 class CLI implements QUI\Composer\Interfaces\ComposerInterface
 {
@@ -80,7 +78,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * CLI constructor.
      *
      * @param string $workingDir
-     *
      * @throws Exception
      */
     public function __construct(string $workingDir)
@@ -143,7 +140,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
     /**
      * Disable the direct output
-     * All composer execution dont't displays the output
+     * All composer execution don't displays the output
      * composer execution is via exec()
      */
     public function mute(): void
@@ -152,9 +149,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
-     * Return all installed packages with its current versions
+     * Return all installed packages with their current versions
      *
-     * @return array
+     * @return array<string, string>
      * @throws Exception
      */
     public function getVersions(): array
@@ -170,7 +167,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
                 continue;
             }
 
-            $package = preg_replace('#([ ]){2,}#', "$1", $package);
+            $package = preg_replace('#( ){2,}#', "$1", $package);
             $package = explode(' ', $package);
 
             $name = $package[0];
@@ -185,9 +182,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes a composer install
      *
-     * @param array $options - Additional options
-     * @return array
-     *
+     * @param array<string, mixed> $options - Additional options
+     * @return array<int, mixed>
      * @throws Exception
      */
     public function install(array $options = []): array
@@ -202,9 +198,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes an composer update command
      *
-     * @param array $options - Additional options
-     * @return array
-     *
+     * @param array<string, mixed> $options - Additional options
+     * @return array<int, mixed>
      * @throws Exception
      */
     public function update(array $options = []): array
@@ -221,9 +216,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *
      * @param array|string $package - The package
      * @param string $version - The version of the package
-     * @param array $options
-     *
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<int, mixed>
      */
     public function requirePackage(array | string $package, string $version = "", array $options = []): array
     {
@@ -251,11 +245,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Executes the composer outdated command.
      *
      * @param bool $direct - Check only direct dependencies
-     *
-     * @param array $options
-     *
-     * @return array - Returns false on failure and an array of package names on success
-     *
+     * @param array<string, mixed> $options
+     * @return array<int, array{package: string, version: string}> - Returns false on failure and an array of package names on success
      * @throws Exception
      */
     public function outdated(bool $direct = false, array $options = []): array
@@ -294,8 +285,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Return the packages which could be updated
      *
-     * @return array
-     *
+     * @return array<int, array{package: string, version: string, oldVersion: string}>
      * @throws Exception
      */
     public function getOutdatedPackages(): array
@@ -375,7 +365,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Checks if updates are available
      *
      * @param bool $direct - Only direct dependencies
-     *
      * @return bool
      */
     public function updatesAvailable(bool $direct = false): bool
@@ -390,8 +379,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Generates the autoloader files again without downloading anything
      *
-     * @param array $options
-     *
+     * @param array<string, mixed> $options
      * @return bool - true on success
      */
     public function dumpAutoload(array $options = []): bool
@@ -409,9 +397,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Searches the repositories for the given needle
      *
      * @param string|array $needle
-     * @param array $options
-     *
-     * @return array - Returns an array in the format : array( packagename => description)
+     * @param array<string, mixed> $options
+     * @return array<string, string> - Returns an array in the format: array('packagename' => description)
      */
     public function search($needle, array $options = []): array
     {
@@ -452,9 +439,8 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Lists all installed packages
      *
      * @param string $package
-     * @param array $options
-     *
-     * @return array - returns an array with all installed packages
+     * @param array<string, mixed> $options
+     * @return array<int, string> - returns an array with all installed packages
      */
     public function show(string $package = "", array $options = []): array
     {
@@ -468,7 +454,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $packages = [];
 
         foreach ($output as $line) {
-            // Replace all spaces (multiple or single) by a single space
+            // Replace all spaces (multiple or single) with a single space
             $line = preg_replace($regex, " ", $line);
             $words = explode(" ", $line);
 
@@ -504,7 +490,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes the composer why command.
      * This commands displays why the package has been installed and which packages require it.
-     * Returnformat:
+     * Return format:
      * ```
      * array(
      * 0 => array(
@@ -514,11 +500,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      *      );
      * )
      * ```
-     * @param $package
-     * @return array
+     * @param string $package
+     * @return array<int, array{package: string, version: string, constraint: string}>
      * @throws Exception
      */
-    public function why($package): array
+    public function why(string $package): array
     {
         $options['packages'] = [$package];
 
@@ -561,13 +547,12 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Execute the composer shell command (system())
      *
-     * @param $cmd - The command that should be executed
-     * @param array $options - Array of commandline paramters. Format : array(option => value)
-     * @param array $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
-     *
+     * @param string $cmd - The command that should be executed
+     * @param array<string, mixed> $options - Array of commandline parameters. Format: array(option => value)
+     * @param array<string, mixed> $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
      * @throws Exception
      */
-    protected function systemComposer($cmd, array $options = [], array $tokens = []): void
+    protected function systemComposer(string $cmd, array $options = [], array $tokens = []): void
     {
         $packages = [];
 
@@ -607,7 +592,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             }
         }
 
-
         $result = $this->runProcess($command);
 
         if ($result['successful'] === false) {
@@ -628,15 +612,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Execute the composer shell command
      *
-     * @param $cmd - The command that should be executed
-     * @param array $options - Array of commandline paramters. Format : array(option => value)
-     * @param array $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
-     *
-     * @return array
+     * @param string $cmd - The command that should be executed
+     * @param array<string, mixed> $options - Array of commandline parameters. Format: array(option => value)
+     * @param array<string, mixed> $tokens - composer command tokens -> composer.phar [command} [options] [tokens]
+     * @return array<int, mixed>
      *
      * @throws Exception
      */
-    protected function execComposer($cmd, array $options = [], array $tokens = []): array
+    protected function execComposer(string $cmd, array $options = [], array $tokens = []): array
     {
         $packages = [];
 
@@ -652,7 +635,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
-        // Parse output into array and remove empty lines
+        // Parse output into an array and remove empty lines
         $command = $this->getPHPPath();
         $command .= $this->composerDir . 'composer.phar';
 
@@ -701,10 +684,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Runs the composer
      *
      * @param string $cmd - composer command
-     * @param array $options - composer options
-     * @param array $tokens - composer command tokens -> composer.phar [command] [options] [tokens]
-     *
-     * @return array
+     * @param array<string, mixed> $options - composer options
+     * @param array<string, mixed> $tokens - composer command tokens -> composer.phar [command] [options] [tokens]
+     * @return array<int, mixed>
      * @throws Exception
      *
      */
@@ -722,8 +704,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Returns a properly formatted string of the given option array
      *
-     * @param array $options
-     *
+     * @param array<string, mixed> $options
      * @return string
      */
     protected function getOptionString(array $options): string
@@ -780,7 +761,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
      * Execute a process
      *
      * @param string $cmd
-     * @return array
+     * @return array<string, mixed>
      */
     protected function runProcess(string $cmd): array
     {

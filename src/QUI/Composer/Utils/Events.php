@@ -19,9 +19,6 @@ use function usort;
 /**
  * Events Handling
  * Extends a class with the events interface
- *
- * @author  www.pcsg.de (Henning Leutz)
- * @licence For copyright and license information, please view the /README.md
  */
 class Events
 {
@@ -109,7 +106,7 @@ class Events
     }
 
     /**
-     * @param array $events - (optional) If not passed removes all events of all types.
+     * @param array $events - (optional) If not passed, removes all events of all types.
      * @see QUI\Interfaces\Events::removeEvents
      *
      */
@@ -183,7 +180,7 @@ class Events
                     continue;
                 }
 
-                $fn = preg_replace('/[\\\\]{2,}/', '\\', $fn);
+                $fn = preg_replace('/\\{2,}/', '\\', $fn);
 
                 if ($args === false) {
                     $results[$fn] = call_user_func($fn);

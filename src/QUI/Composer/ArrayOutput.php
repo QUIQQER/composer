@@ -14,8 +14,6 @@ use function strpos;
 
 /**
  * Class ArrayOutput
- *
- * @package QUI\Composer
  */
 class ArrayOutput extends Output
 {
@@ -35,8 +33,11 @@ class ArrayOutput extends Output
      * @param bool $decorated
      * @param OutputFormatterInterface|null $formatter
      */
-    public function __construct($verbosity = self::VERBOSITY_NORMAL, $decorated = false, $formatter = null)
-    {
+    public function __construct(
+        $verbosity = self::VERBOSITY_NORMAL,
+        bool $decorated = false,
+        null | OutputFormatterInterface $formatter = null
+    ) {
         parent::__construct($verbosity, $decorated, $formatter);
     }
 
@@ -45,7 +46,7 @@ class ArrayOutput extends Output
      * @param string $message - The message that should be written
      * @param bool $newline - true, if the current line should be finished.
      */
-    protected function doWrite($message, $newline): void
+    protected function doWrite(string $message, bool $newline): void
     {
         $this->curLine .= $message;
 
@@ -56,7 +57,6 @@ class ArrayOutput extends Output
         if (!$newline) {
             return;
         }
-
 
         $this->lines[] = $this->curLine;
         $this->curLine = '';

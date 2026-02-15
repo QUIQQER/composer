@@ -14,8 +14,6 @@ use function trim;
 
 /**
  * Class Parser
- *
- * @package QUI\Composer\Utils
  */
 class Parser
 {
@@ -24,7 +22,7 @@ class Parser
      * eq: quiqqer/core               dev-dev 0572859      dev-dev 5dcea72    A modular based management
      *
      * @param $string
-     * @return array
+     * @return array<string, string>
      */
     public static function parsePackageLineToArray($string): array
     {
@@ -59,7 +57,6 @@ class Parser
         $spaceNext = strpos($versionTemp, ' ');
 
         $result['package'] = trim(substr($string, 0, $spacePos));
-
         $result['version'] = trim(substr($versionTemp, 0, $spaceNext));
         $result['version'] = ltrim($result['version'], 'v');
 

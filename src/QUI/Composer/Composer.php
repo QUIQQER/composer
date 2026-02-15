@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This files contains QUI\Composer
+ * This file contains QUI\Composer
  */
 
 namespace QUI\Composer;
@@ -13,8 +13,6 @@ use function rtrim;
 
 /**
  * Class Composer
- *
- * @package QUI\Composer
  */
 class Composer implements QUI\Composer\Interfaces\ComposerInterface
 {
@@ -61,7 +59,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Composer constructor.
      *
-     * Can be used as general access point to composer.
+     * Can be used as a general access point to composer.
      * Will use CLI composer if shell_exec is available
      *
      * @param string $workingDir
@@ -194,7 +192,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes composers require command
      *
-     * @param array|string $package - Name of the package : i.E. 'quiqqer/core' or list of packages
+     * @param array|string $package - Name of the package: i.E. 'quiqqer/core' or list of packages
      * @param string $version
      * @param array $options
      * @return array
@@ -205,7 +203,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
-     * Executes composers outdated command
+     * Executes composers' outdated command
      *
      * @param bool $direct
      * @param array $options
@@ -217,7 +215,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
-     * Checks wether updates are available
+     * Checks whether updates are available
      *
      * @param bool $direct
      * @return bool - true if updates are available
@@ -267,7 +265,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * @param $needle
      * @param array $options
      *
-     * @return array - Returns an array in the format : array( packagename => description)
+     * @return array - Returns an array in the format: array( packagename => description)
      */
     public function search($needle, array $options = []): array
     {
