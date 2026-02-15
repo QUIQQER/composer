@@ -11,6 +11,7 @@ use QUI;
 
 use function call_user_func;
 use function call_user_func_array;
+use function is_callable;
 use function is_string;
 use function preg_replace;
 use function ucfirst;
@@ -19,26 +20,23 @@ use function usort;
 /**
  * Events Handling
  * Extends a class with the events interface
- *
- * @author  www.pcsg.de (Henning Leutz)
- * @licence For copyright and license information, please view the /README.md
  */
 class Events
 {
     /**
      * Registered events
      *
-     * @var array
+     * @var array<string, array<int, array{callable: callable, priority: int}>>
      */
     protected array $events = [];
 
     /**
-     * @var array
+     * @var array<string, bool>
      */
     protected array $currentRunning = [];
 
     /**
-     * @see QUI\Interfaces\Events::getList
+     * @return array<string, array<int, array{callable: callable, priority: int}>>
      */
     public function getList(): array
     {
@@ -72,7 +70,7 @@ class Events
     }
 
     /**
-     * @param array $events
+     * @param array<string, callable> $events
      * @see QUI\Interfaces\Events::addEvents
      *
      */
@@ -102,14 +100,14 @@ class Events
         }
 
         foreach ($this->events[$event] as $k => $_fn) {
-            if ($_fn == $fn) {
+            if ($_fn['callable'] == $fn) {
                 unset($this->events[$event][$k]);
             }
         }
     }
 
     /**
-     * @param array $events - (optional) If not passed removes all events of all types.
+     * @param array<string, callable|bool> $events - (optional) If not passed, removes all events of all types.
      * @see QUI\Interfaces\Events::removeEvents
      *
      */
@@ -122,11 +120,11 @@ class Events
 
     /**
      * @param string $event - The type of event (e.g. 'onComplete').
-     * @param boolean|array $args - (optional) the argument(s) to pass to the function.
+     * @param bool|array<int, mixed> $args - (optional) the argument(s) to pass to the function.
      *                            The arguments must be in an array.
-     * @param boolean $force - (optional) no recursion check, optional, default = false
+     * @param bool $force - (optional) no recursion check, optional, default = false
      *
-     * @return array - Event results, associative array
+     * @return array<string, mixed> - Event results, associative array
      *
      * @throws QUI\ExceptionStack
      * @see QUI\Interfaces\Events::fireEvent
@@ -160,7 +158,7 @@ class Events
         $events = $this->events[$event];
 
         // sort
-        usort($events, function ($a, $b) {
+        usort($events, function (array $a, array $b) {
             if ($a['priority'] == $b['priority']) {
                 return 0;
             }
@@ -179,13 +177,31 @@ class Events
                         continue;
                     }
 
+                    if (!is_array($args)) {
+                        $fn();
+                        continue;
+                    }
+
                     call_user_func_array($fn, $args);
                     continue;
                 }
 
-                $fn = preg_replace('/[\\\\]{2,}/', '\\', $fn);
+                $fn = preg_replace('/\\{2,}/', '\\', $fn);
+
+                if ($fn === null) {
+                    continue;
+                }
+
+                if (!is_callable($fn)) {
+                    continue;
+                }
 
                 if ($args === false) {
+                    $results[$fn] = call_user_func($fn);
+                    continue;
+                }
+
+                if (!is_array($args)) {
                     $results[$fn] = call_user_func($fn);
                     continue;
                 }

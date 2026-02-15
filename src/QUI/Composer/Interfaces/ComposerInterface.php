@@ -11,8 +11,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Interface Composer
- *
- * @package QUI\Composer\Interfaces
  */
 interface ComposerInterface
 {
@@ -45,18 +43,16 @@ interface ComposerInterface
     /**
      * Executes the composer install command
      *
-     * @param array $options - Optional commandline parameters
-     *
-     * @return array - The output of the command split into an array. One line per entry.
+     * @param array<string, mixed> $options - Optional commandline parameters
+     * @return array<int, string> - The output of the command split into an array. One line per entry.
      */
     public function install(array $options = []): array;
 
     /**
      * Executes the composer update command
      *
-     * @param array $options - Optional commandline parameters
-     *
-     * @return array - The output of the command split into an array. One line per entry.
+     * @param array<string, mixed> $options - Optional commandline parameters
+     * @return array<int, string> - The output of the command split into an array. One line per entry.
      */
     public function update(array $options = []): array;
 
@@ -64,47 +60,42 @@ interface ComposerInterface
      * Executes the Composer command with the specified options.
      *
      * @param string $command The Composer command to execute.
-     * @param array $options An optional array of options to pass to the Composer command.
-     * @return array The output of the Composer command as an array.
+     * @param array<string, mixed> $options An optional array of options to pass to the Composer command.
+     * @return array<int, string> The output of the Composer command as an array.
      */
     public function executeComposer(string $command, array $options = []): array;
 
     /**
      * Executes the composer require command
      *
-     * @param array|string $package
+     * @param array<string> $package
      * @param string $version
-     * @param array $options
-     *
-     * @return array - The output of the command split into an array. One line per entry.
-     *
-     * @internal param array $options - Optional commandline parameters
+     * @param array<string, mixed> $options
+     * @return array<int, string> - The output of the command split into an array. One line per entry.
      */
     public function requirePackage(array | string $package, string $version = "", array $options = []): array;
 
     /**
      * Gets all outdated packages
      *
-     * @param bool $direct - If true : Checks only direct requirements
-     * @param array $options
-     *
-     * @return array - Array with names of all outdated packages
+     * @param bool $direct - If true: Checks only direct requirements
+     * @param array<string, mixed> $options
+     * @return array<int, array{package: string, version: string}> - Array with names of all outdated packages
      */
     public function outdated(bool $direct = false, array $options = []): array;
 
     /**
      * Checks if updates are available
      *
-     * @param bool $direct - If true : Checks only direct requirements
-     *
-     * @return bool - true if updates are available, false if everything is up-to-date
+     * @param bool $direct - If true: Checks only direct requirements
+     * @return bool - true if updates are available, false if everything is up to date
      */
     public function updatesAvailable(bool $direct): bool;
 
     /**
      * Generates the autoloader files again without downloading anything
      *
-     * @param array $options
+     * @param array<string, mixed> $options
      * @return bool - true on success
      */
     public function dumpAutoload(array $options = []): bool;
@@ -112,20 +103,18 @@ interface ComposerInterface
     /**
      * Searches the repositories for the given needle
      *
-     * @param $needle
-     * @param array $options
-     *
-     * @return array - Returns an array in the format : array( package name => description)
+     * @param string $needle
+     * @param array<string, mixed> $options
+     * @return array<string, string> - Returns an array in the format: array( package name => description)
      */
-    public function search($needle, array $options = []): array;
+    public function search(string $needle, array $options = []): array;
 
     /**
      * Lists all installed packages
      *
      * @param string $package
-     * @param array $options
-     *
-     * @return array - returns an array with all installed packages
+     * @param array<string, mixed> $options
+     * @return array<int, string> - returns an array with all installed packages
      */
     public function show(string $package = "", array $options = []): array;
 
@@ -139,8 +128,7 @@ interface ComposerInterface
     /**
      * Return the packages which could be updated
      *
-     * @return array
-     *
+     * @return array<int, array{package: string, version: string, oldVersion: string}>
      * @throws Exception
      */
     public function getOutdatedPackages(): array;
@@ -149,9 +137,8 @@ interface ComposerInterface
      * Executes the composer why command.
      * This commands displays why the package has been installed and which packages require it.
      *
-     * @param $package
-     *
-     * @return array
+     * @param string $package
+     * @return array<int, array{package: string, version: string, constraint: string}>
      */
-    public function why($package): array;
+    public function why(string $package): array;
 }

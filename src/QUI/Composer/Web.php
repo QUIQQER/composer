@@ -10,6 +10,8 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function array_merge;
+use function array_reverse;
+use function array_slice;
 use function array_values;
 use function chdir;
 use function count;
@@ -29,6 +31,7 @@ use function preg_replace;
 use function putenv;
 use function rtrim;
 use function str_replace;
+use function stripos;
 use function strlen;
 use function strpos;
 use function substr;
@@ -38,8 +41,6 @@ use const PATHINFO_BASENAME;
 
 /**
  * Class Web
- *
- * @package QUI\Composer
  */
 class Web implements QUI\Composer\Interfaces\ComposerInterface
 {
@@ -143,9 +144,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
-     * Return all installed packages with its current versions
+     * Return all installed packages with their current versions
      *
-     * @return array
+     * @return array<string, string>
      * @throws Exception
      */
     public function getVersions(): array
@@ -161,8 +162,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
                 continue;
             }
 
-            $package = preg_replace('#([ ]){2,}#', "$1", $package);
-            $package = explode(' ', $package);
+            $package = preg_replace('#( ){2,}#', "$1", $package);
+            $package = explode(' ', (string)$package);
 
             $name = $package[0];
             $version = $package[1];
@@ -176,9 +177,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer install
      *
-     * @param array $options - additional options
-     *
-     * @return array
+     * @param array<string, mixed> $options - additional options
+     * @return array<int, string>
      * @throws Exception
      */
     public function install(array $options = []): array
@@ -193,9 +193,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer update
      *
-     * @param array $options - Additional options
-     *
-     * @return array
+     * @param array<string, mixed> $options - Additional options
+     * @return array<int, string>
      * @throws Exception
      */
     public function update(array $options = []): array
@@ -210,11 +209,10 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Performs a composer require
      *
-     * @param array|string $package - The package name
+     * @param array<string>|string $package - The package name
      * @param string $version - The package version
-     * @param array $options
-     *
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<int, string>
      * @throws Exception
      */
     public function requirePackage(array | string $package, string $version = "", array $options = []): array
@@ -240,7 +238,6 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Checks if packages can be updated
      *
      * @param bool $direct - Only direct dependencies
-     *
      * @return bool - true if updates are available, false if no updates are available
      * @throws Exception
      */
@@ -259,10 +256,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Performs a composer outdated
      *
      * @param bool $direct - Only direct dependencies
-     * @param array $options
-     *
-     * @return array - Array of package names
-     *
+     * @param array<string, mixed> $options
+     * @return array<int, array{package: string, version: string}> - Array of package names
      * @throws Exception
      */
     public function outdated(bool $direct = false, array $options = []): array
@@ -293,7 +288,18 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
                 continue;
             }
 
-            $outdated = json_decode($line, true)['installed'];
+            $decoded = json_decode($line, true);
+            $installed = null;
+
+            if (is_array($decoded)) {
+                $installed = $decoded['installed'] ?? null;
+            }
+
+            if (!is_array($installed)) {
+                continue;
+            }
+
+            $outdated = $installed;
             break;
         }
 
@@ -302,6 +308,10 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         foreach ($outdated as $package) {
+            if (!is_array($package) || !isset($package['name'], $package['version'])) {
+                continue;
+            }
+
             $packages[] = [
                 "package" => $package['name'],
                 "version" => $package['version'],
@@ -314,7 +324,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Return all outdated packages
      *
-     * @return array
+     * @return array<int, array{package: string, version: string, oldVersion: string}>
      * @throws Exception
      */
     public function getOutdatedPackages(): array
@@ -338,15 +348,31 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
             if (str_contains($line, ' => ')) {
                 $parts = explode(' (', $line);
+
+                if (!isset($parts[1])) {
+                    continue;
+                }
+
                 $package = $parts[0];
                 $versions = str_replace(')', '', $parts[1]);
 
                 // old version
                 $firstSpace = strpos($versions, ' ');
+
+                if ($firstSpace === false) {
+                    $firstSpace = strlen($versions);
+                }
+
                 $oldVersion = trim(substr($versions, 0, $firstSpace), '() ');
 
                 // new version
-                $newVersion = explode(' => ', $versions)[1];
+                $newVersionParts = explode(' => ', $versions);
+
+                if (!isset($newVersionParts[1])) {
+                    continue;
+                }
+
+                $newVersion = $newVersionParts[1];
                 $firstSpace = strpos($newVersion, ' ');
 
                 if ($firstSpace === false) {
@@ -357,21 +383,46 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             } else {
                 $line = explode(' to ', $line);
 
+                if (!isset($line[1])) {
+                    continue;
+                }
+
                 // old version
                 $firstSpace = strpos($line[0], ' ');
-                $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+
+                if ($firstSpace === false) {
+                    $oldVersion = '';
+                } else {
+                    $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+                }
 
                 // new version
                 $firstSpace = strpos($line[1], ' ');
-                $newVersion = trim(substr($line[1], $firstSpace), '() ');
-                $package = trim(substr($line[1], 0, $firstSpace));
+
+                if ($firstSpace === false) {
+                    $newVersion = trim($line[1], '() ');
+                    $package = trim($line[1]);
+                } else {
+                    $newVersion = trim(substr($line[1], $firstSpace), '() ');
+                    $package = trim(substr($line[1], 0, $firstSpace));
+                }
 
                 if (str_contains($oldVersion, 'Reading ')) {
                     $packageStart = strpos($line[0], $package);
+
+                    if ($packageStart === false) {
+                        continue;
+                    }
+
                     $line[0] = substr($line[0], $packageStart);
 
                     $firstSpace = strpos($line[0], ' ');
-                    $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+
+                    if ($firstSpace === false) {
+                        $oldVersion = '';
+                    } else {
+                        $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+                    }
                 }
             }
 
@@ -392,8 +443,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Generates the autoloader files again without downloading anything
      *
-     * @param array $options
-     *
+     * @param array<string, mixed> $options
      * @return bool - true on success
      * @throws Exception
      */
@@ -407,13 +457,12 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Searches the repositories for the given needle
      *
-     * @param       $needle
-     * @param array $options
-     *
-     * @return array - Returns an array in the format : array( packagename => description)
+     * @param string $needle
+     * @param array<string, mixed> $options
+     * @return array<string, string> - Returns an array in the format: array( packagename => description)
      * @throws Exception
      */
-    public function search($needle, array $options = []): array
+    public function search(string $needle, array $options = []): array
     {
         $result = $this->executeComposer('search', [
             "tokens" => [$needle]
@@ -449,7 +498,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
             $split = explode(" ", $line, 2);
 
-            if (isset($split[0]) && isset($split[1])) {
+            if (isset($split[1])) {
                 $packages[$split[0]] = $split[1];
             }
         }
@@ -461,9 +510,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Lists all installed packages
      *
      * @param string $package
-     * @param array $options
-     *
-     * @return array - returns an array with all installed packages
+     * @param array<string, mixed> $options
+     * @return array<string> - returns an array with all installed packages
      * @throws Exception
      */
     public function show(string $package = "", array $options = []): array
@@ -477,9 +525,9 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         $packages = [];
 
         foreach ($result as $line) {
-            // Replace all spaces (multiple or single) by a single space
+            // Replace all spaces (multiple or single) with a single space
             $line = preg_replace($regex, " ", $line);
-            $words = explode(" ", $line);
+            $words = explode(" ", (string)$line);
 
             if (
                 $words[0] != ""
@@ -528,19 +576,18 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * ```
      * array(
      * 0 => array(
-     *          "package" => "vendor/package",
-     *          "version" => "2.1.2",
-     *          "constraint" => ^4.2 | 5.0.*
-     *      );
+     *     "package" => "vendor/package",
+     *     "version" => "2.1.2",
+     *     "constraint" => ^4.2 | 5.0.*
+     * );
      * )
      * ```
      *
-     * @param $package
-     *
-     * @return array
+     * @param string $package
+     * @return array<int, array{package: string, version: string, constraint: string}>
      * @throws Exception
      */
-    public function why($package): array
+    public function why(string $package): array
     {
         $options['package'] = $package;
         $result = [];
@@ -593,8 +640,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Execute the composer
      *
      * @param string $command
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<int, string>
      *
      * @throws QUI\Exception
      */
@@ -633,7 +680,113 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
                 }
             }
 
-            throw new QUI\Exception('Something went wrong', $code, [
+            $errorLines = [];
+
+            foreach ($lines as $key => $line) {
+                $line = trim($line);
+
+                if (!preg_match('/^\[[^\]]+\]$/', $line)) {
+                    continue;
+                }
+
+                for ($i = $key + 1; $i <= $key + 8; $i++) {
+                    if (!isset($lines[$i])) {
+                        break;
+                    }
+
+                    $candidate = trim($lines[$i]);
+
+                    if ($candidate === '' || $candidate === 'Exception trace:') {
+                        continue;
+                    }
+
+                    if (str_contains($candidate, '->') && str_contains($candidate, ' at ')) {
+                        continue;
+                    }
+
+                    $errorLines[] = $candidate;
+                    break;
+                }
+            }
+
+            $keywords = [
+                'error',
+                'failed',
+                'exception',
+                'could not',
+                'Your requirements could not be resolved',
+                'Installation failed'
+            ];
+
+            foreach (array_reverse($lines) as $line) {
+                $line = trim($line);
+
+                if ($line === '') {
+                    continue;
+                }
+
+                foreach ($keywords as $keyword) {
+                    if (stripos($line, $keyword) !== false) {
+                        $errorLines[] = $line;
+                        break;
+                    }
+                }
+
+                if (count($errorLines) >= 3) {
+                    break;
+                }
+            }
+
+            if (empty($errorLines)) {
+                foreach (array_reverse($lines) as $line) {
+                    $line = trim($line);
+
+                    if ($line === '') {
+                        continue;
+                    }
+
+                    $errorLines[] = $line;
+
+                    if (count($errorLines) >= 3) {
+                        break;
+                    }
+                }
+            }
+
+            $errorLines = array_reverse($errorLines);
+
+            $onlyGenericErrorLines = !empty($errorLines);
+
+            foreach ($errorLines as $errorLine) {
+                if ($errorLine !== '[Error]' && $errorLine !== 'Exception trace:') {
+                    $onlyGenericErrorLines = false;
+                    break;
+                }
+            }
+
+            if (empty($errorLines) || $onlyGenericErrorLines) {
+                $tail = [];
+
+                foreach ($lines as $line) {
+                    $line = trim($line);
+
+                    if ($line === '') {
+                        continue;
+                    }
+
+                    $tail[] = $line;
+                }
+
+                $errorLines = array_slice($tail, -8);
+            }
+
+            $message = 'Composer command "' . $command . '" failed';
+
+            if (!empty($errorLines)) {
+                $message .= ': ' . implode(' | ', $errorLines);
+            }
+
+            throw new QUI\Exception($message, $code, [
                 'output' => $lines
             ]);
         }
