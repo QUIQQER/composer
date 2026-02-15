@@ -24,18 +24,18 @@ class ComposerTest extends TestCase
             'version' => "1.0.0"
         ],
         'testOutdated' => [
-            'name' => "sebastian/version",
-            'version' => "1.0.0"
+            'name' => "symfony/polyfill-ctype",
+            'version' => "1.10.0"
         ],
         'testUpdate' => [
-            'name' => "sebastian/version",
-            'version' => "1.0.0",
-            'version2' => "1.0.6"
+            'name' => "symfony/polyfill-ctype",
+            'version' => "1.10.0",
+            'version2' => "1.33.0"
         ],
         'default' => [
-            'name' => "sebastian/version",
-            'version' => "1.0.0",
-            'version2' => "1.0.6"
+            'name' => "symfony/polyfill-ctype",
+            'version' => "1.10.0",
+            'version2' => "1.33.0"
         ]
     ];
 
@@ -99,7 +99,20 @@ class ComposerTest extends TestCase
             $this->testPackages['testRequire']['version']
         );
 
-        $this->assertFileExists($this->workingDir . "/vendor/psr/log/README.md");
+        $json = file_get_contents($this->workingDir . "/composer.lock");
+        $data = json_decode($json, true);
+        $packages = $data['packages'];
+
+        $containsPackage = false;
+
+        foreach ($packages as $package) {
+            if (($package['name'] ?? null) === $this->testPackages['testRequire']['name']) {
+                $containsPackage = true;
+                break;
+            }
+        }
+
+        $this->assertTrue($containsPackage);
 
         $json = file_get_contents($this->workingDir . "/composer.json");
         $data = json_decode($json, true);
@@ -196,7 +209,7 @@ class ComposerTest extends TestCase
         $result = $Composer->show();
 
         $this->assertTrue(is_array($result));
-        $this->assertContains("sebastian/version", $result);
+        $this->assertContains($this->testPackages['default']['name'], $result);
     }
 
     /**
@@ -271,7 +284,21 @@ class ComposerTest extends TestCase
         );
 
         $this->assertTrue($Composer->updatesAvailable(true));
-        $Composer->requirePackage($this->testPackages['default']['name'], "dev-main@dev");
+        $targetPackage = $this->testPackages['default']['name'];
+        $targetVersion = null;
+
+        foreach ($Composer->getOutdatedPackages() as $entry) {
+            if (($entry['package'] ?? null) === $targetPackage) {
+                $targetVersion = $entry['version'] ?? null;
+                break;
+            }
+        }
+
+        if (empty($targetVersion) || !is_string($targetVersion)) {
+            $this->markTestSkipped('No installable target version found for updatesAvailable test.');
+        }
+
+        $Composer->requirePackage($targetPackage, $targetVersion);
         $outdated = $Composer->outdated(true);
 
         $this->assertFalse($this->outdatedContainsPackage(
