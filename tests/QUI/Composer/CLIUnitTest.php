@@ -27,7 +27,7 @@ class CLIUnitTest extends TestCase
 
     public function testPublicMethodsUsingStubs(): void
     {
-        $cli = new CLITestDouble($this->workingDir);
+        $cli = $this->createCliDouble();
         $cli->runComposerOutput = ['vendor/pkg 1.2.3'];
         $this->assertSame(['vendor/pkg' => '1.2.3'], $cli->getVersions());
 
@@ -57,7 +57,7 @@ class CLIUnitTest extends TestCase
 
     public function testErrorHandlingPaths(): void
     {
-        $cli = new CLITestDouble($this->workingDir);
+        $cli = $this->createCliDouble();
 
         $cli->throwOnExec = true;
         $this->assertFalse($cli->clearCache());
@@ -72,7 +72,7 @@ class CLIUnitTest extends TestCase
 
     public function testRunComposerAndExecComposerInternals(): void
     {
-        $cli = new CLITestDouble($this->workingDir);
+        $cli = $this->createCliDouble();
 
         $cli->mute();
         $cli->execComposerOutput = ['one', 'two'];
@@ -101,7 +101,7 @@ class CLIUnitTest extends TestCase
 
     public function testOptionStringAndRuntimeHelpers(): void
     {
-        $cli = new CLITestDouble($this->workingDir);
+        $cli = $this->createCliDouble();
 
         $optionString = $cli->callParentGetOptionString([
             '--flag' => true,
@@ -119,7 +119,7 @@ class CLIUnitTest extends TestCase
 
     public function testAddEventStoresCallback(): void
     {
-        $cli = new CLITestDouble($this->workingDir);
+        $cli = $this->createCliDouble();
         $called = false;
 
         $cli->addEvent('onOutput', static function () use (&$called): void {
@@ -156,77 +156,79 @@ class CLIUnitTest extends TestCase
         closedir($dir);
         rmdir($src);
     }
-}
 
-class CLITestDouble extends CLI
-{
-    /** @var array<int, mixed> */
-    public array $runComposerOutput = [];
-    /** @var array<int, string> */
-    public array $execComposerOutput = [];
-    public bool $throwOnRun = false;
-    public bool $throwOnExec = false;
-    /** @var array{successful: bool, output: string}|null */
-    public ?array $mockProcessResult = null;
-
-    protected function runComposer(string $cmd, array $options = [], array $tokens = []): array
+    private function createCliDouble(): CLI
     {
-        if ($this->throwOnRun) {
-            throw new Exception('run failed');
-        }
+        return new class ($this->workingDir) extends CLI {
+            /** @var array<int, mixed> */
+            public array $runComposerOutput = [];
+            /** @var array<int, string> */
+            public array $execComposerOutput = [];
+            public bool $throwOnRun = false;
+            public bool $throwOnExec = false;
+            /** @var array{successful: bool, output: string}|null */
+            public ?array $mockProcessResult = null;
 
-        return $this->runComposerOutput;
-    }
+            protected function runComposer(string $cmd, array $options = [], array $tokens = []): array
+            {
+                if ($this->throwOnRun) {
+                    throw new Exception('run failed');
+                }
 
-    protected function execComposer(string $cmd, array $options = [], array $tokens = []): array
-    {
-        if ($this->throwOnExec) {
-            throw new Exception('exec failed');
-        }
+                return $this->runComposerOutput;
+            }
 
-        return $this->execComposerOutput;
-    }
+            protected function execComposer(string $cmd, array $options = [], array $tokens = []): array
+            {
+                if ($this->throwOnExec) {
+                    throw new Exception('exec failed');
+                }
 
-    protected function runProcess(string $cmd): array
-    {
-        if ($this->mockProcessResult !== null) {
-            return [
-                'Process' => null,
-                'successful' => $this->mockProcessResult['successful'],
-                'output' => $this->mockProcessResult['output']
-            ];
-        }
+                return $this->execComposerOutput;
+            }
 
-        return parent::runProcess($cmd);
-    }
+            protected function runProcess(string $cmd): array
+            {
+                if ($this->mockProcessResult !== null) {
+                    return [
+                        'Process' => null,
+                        'successful' => $this->mockProcessResult['successful'],
+                        'output' => $this->mockProcessResult['output']
+                    ];
+                }
 
-    public function callParentRunComposer(string $cmd, array $options = [], array $tokens = []): array
-    {
-        return parent::runComposer($cmd, $options, $tokens);
-    }
+                return parent::runProcess($cmd);
+            }
 
-    public function callParentExecComposer(string $cmd, array $options = [], array $tokens = []): array
-    {
-        return parent::execComposer($cmd, $options, $tokens);
-    }
+            public function callParentRunComposer(string $cmd, array $options = [], array $tokens = []): array
+            {
+                return parent::runComposer($cmd, $options, $tokens);
+            }
 
-    public function callParentGetOptionString(array $options): string
-    {
-        return parent::getOptionString($options);
-    }
+            public function callParentExecComposer(string $cmd, array $options = [], array $tokens = []): array
+            {
+                return parent::execComposer($cmd, $options, $tokens);
+            }
 
-    public function callParentIsFCGI(): ?bool
-    {
-        return parent::isFCGI();
-    }
+            public function callParentGetOptionString(array $options): string
+            {
+                return parent::getOptionString($options);
+            }
 
-    public function eventsList(): array
-    {
-        $reflection = new \ReflectionClass($this);
-        $property = $reflection->getProperty('Events');
-        $property->setAccessible(true);
-        $events = $property->getValue($this);
+            public function callParentIsFCGI(): ?bool
+            {
+                return parent::isFCGI();
+            }
 
-        return $events->getList();
+            public function eventsList(): array
+            {
+                $reflection = new \ReflectionClass($this);
+                $property = $reflection->getProperty('Events');
+                $property->setAccessible(true);
+                $events = $property->getValue($this);
+
+                return $events->getList();
+            }
+        };
     }
 }

@@ -27,7 +27,7 @@ class WebUnitTest extends TestCase
 
     public function testGetVersionsAndBasicCommands(): void
     {
-        $web = new WebTestDouble($this->workingDir);
+        $web = $this->createWebDouble();
         $web->responseByCommand['show'] = [
             '<warning>ignored</warning>',
             'vendor/pkg  1.2.3'
@@ -47,7 +47,7 @@ class WebUnitTest extends TestCase
 
     public function testOutdatedAndUpdatesAvailable(): void
     {
-        $web = new WebTestDouble($this->workingDir);
+        $web = $this->createWebDouble();
         $web->responseByCommand['show'] = [
             'Reading x',
             '{"installed":[{"name":"vendor/pkg","version":"1.0.0"}]}'
@@ -63,7 +63,7 @@ class WebUnitTest extends TestCase
 
     public function testParsersForSearchShowWhyAndOutdatedPackages(): void
     {
-        $web = new WebTestDouble($this->workingDir);
+        $web = $this->createWebDouble();
 
         $web->responseByCommand['search'] = [
             'Reading metadata',
@@ -94,7 +94,7 @@ class WebUnitTest extends TestCase
 
     public function testDumpAutoloadAndClearCache(): void
     {
-        $web = new WebTestDouble($this->workingDir);
+        $web = $this->createWebDouble();
         $web->responseByCommand['dump-autoload'] = ['ok'];
 
         $this->assertTrue($web->dumpAutoload());
@@ -103,7 +103,7 @@ class WebUnitTest extends TestCase
 
     public function testExecuteComposerExceptionCanBeSimulated(): void
     {
-        $web = new WebTestDouble($this->workingDir);
+        $web = $this->createWebDouble();
         $web->throwOnCommand = 'install';
 
         $this->expectException(Exception::class);
@@ -135,20 +135,22 @@ class WebUnitTest extends TestCase
         closedir($dir);
         rmdir($src);
     }
-}
 
-class WebTestDouble extends Web
-{
-    /** @var array<string, array<int, string>> */
-    public array $responseByCommand = [];
-    public string $throwOnCommand = '';
-
-    public function executeComposer(string $command, array $options = []): array
+    private function createWebDouble(): Web
     {
-        if ($this->throwOnCommand === $command) {
-            throw new Exception('forced fail');
-        }
+        return new class ($this->workingDir) extends Web {
+            /** @var array<string, array<int, string>> */
+            public array $responseByCommand = [];
+            public string $throwOnCommand = '';
 
-        return $this->responseByCommand[$command] ?? [];
+            public function executeComposer(string $command, array $options = []): array
+            {
+                if ($this->throwOnCommand === $command) {
+                    throw new Exception('forced fail');
+                }
+
+                return $this->responseByCommand[$command] ?? [];
+            }
+        };
     }
 }

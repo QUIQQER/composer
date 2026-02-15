@@ -29,7 +29,7 @@ class ComposerUnitTest extends TestCase
     public function testComposerDelegatesToRunner(): void
     {
         $composer = new Composer($this->workingDir);
-        $runner = new ComposerRunnerFake($this->workingDir);
+        $runner = $this->createRunnerFake($this->workingDir);
         $this->injectRunner($composer, $runner);
 
         $output = $this->createMock(OutputInterface::class);
@@ -62,12 +62,124 @@ class ComposerUnitTest extends TestCase
         $this->assertContains(['executeComposer', ['show', ['a' => 'b']]], $runner->calls);
     }
 
-    private function injectRunner(Composer $composer, ComposerRunnerFake $runner): void
+    private function injectRunner(Composer $composer, ComposerInterface $runner): void
     {
         $reflection = new \ReflectionClass($composer);
         $property = $reflection->getProperty('Runner');
         $property->setAccessible(true);
         $property->setValue($composer, $runner);
+    }
+
+    private function createRunnerFake(string $workingDir): ComposerInterface
+    {
+        return new class ($workingDir) implements ComposerInterface {
+            /** @var array<int, array{0: string, 1: array<int, mixed>}> */
+            public array $calls = [];
+
+            public bool $muteCalled = false;
+            public bool $unmuteCalled = false;
+            public ?OutputInterface $lastOutput = null;
+
+            public function __construct(string $workingDir)
+            {
+            }
+
+            public function setOutput(OutputInterface $Output): void
+            {
+                $this->lastOutput = $Output;
+                $this->calls[] = ['setOutput', [$Output]];
+            }
+
+            public function unmute(): void
+            {
+                $this->unmuteCalled = true;
+                $this->calls[] = ['unmute', []];
+            }
+
+            public function mute(): void
+            {
+                $this->muteCalled = true;
+                $this->calls[] = ['mute', []];
+            }
+
+            public function install(array $options = []): array
+            {
+                $this->calls[] = ['install', [$options]];
+                return ['installed'];
+            }
+
+            public function update(array $options = []): array
+            {
+                $this->calls[] = ['update', [$options]];
+                return ['updated'];
+            }
+
+            public function executeComposer(string $command, array $options = []): array
+            {
+                $this->calls[] = ['executeComposer', [$command, $options]];
+                return ['ok'];
+            }
+
+            public function requirePackage(array | string $package, string $version = "", array $options = []): array
+            {
+                $this->calls[] = ['requirePackage', [$package, $version, $options]];
+                return ['required'];
+            }
+
+            public function outdated(bool $direct = false, array $options = []): array
+            {
+                $this->calls[] = ['outdated', [$direct, $options]];
+                return [['package' => 'p', 'version' => '1.0.0']];
+            }
+
+            public function updatesAvailable(bool $direct): bool
+            {
+                $this->calls[] = ['updatesAvailable', [$direct]];
+                return true;
+            }
+
+            public function dumpAutoload(array $options = []): bool
+            {
+                $this->calls[] = ['dumpAutoload', [$options]];
+                return true;
+            }
+
+            public function search(string $needle, array $options = []): array
+            {
+                $this->calls[] = ['search', [$needle, $options]];
+                return ['vendor/package' => 'desc'];
+            }
+
+            public function show(string $package = "", array $options = []): array
+            {
+                $this->calls[] = ['show', [$package, $options]];
+                return ['vendor/package 1.0.0'];
+            }
+
+            public function clearCache(): bool
+            {
+                $this->calls[] = ['clearCache', []];
+                return true;
+            }
+
+            public function getOutdatedPackages(): array
+            {
+                $this->calls[] = ['getOutdatedPackages', []];
+                return [['package' => 'p', 'version' => '1.1.0', 'oldVersion' => '1.0.0']];
+            }
+
+            public function why(string $package): array
+            {
+                $this->calls[] = ['why', [$package]];
+                return [['package' => 'vendor/package', 'version' => '1.0.0', 'constraint' => '^1.0']];
+            }
+
+            public function getVersions(): array
+            {
+                $this->calls[] = ['getVersions', []];
+                return ['vendor/package' => '1.0.0'];
+            }
+        };
     }
 
     private function removeDir(string $src): void
@@ -95,115 +207,5 @@ class ComposerUnitTest extends TestCase
 
         closedir($dir);
         rmdir($src);
-    }
-}
-
-class ComposerRunnerFake implements ComposerInterface
-{
-    /** @var array<int, array{0: string, 1: array<int, mixed>}> */
-    public array $calls = [];
-
-    public bool $muteCalled = false;
-    public bool $unmuteCalled = false;
-    public ?OutputInterface $lastOutput = null;
-
-    public function __construct(string $workingDir)
-    {
-    }
-
-    public function setOutput(OutputInterface $Output): void
-    {
-        $this->lastOutput = $Output;
-        $this->calls[] = ['setOutput', [$Output]];
-    }
-
-    public function unmute(): void
-    {
-        $this->unmuteCalled = true;
-        $this->calls[] = ['unmute', []];
-    }
-
-    public function mute(): void
-    {
-        $this->muteCalled = true;
-        $this->calls[] = ['mute', []];
-    }
-
-    public function install(array $options = []): array
-    {
-        $this->calls[] = ['install', [$options]];
-        return ['installed'];
-    }
-
-    public function update(array $options = []): array
-    {
-        $this->calls[] = ['update', [$options]];
-        return ['updated'];
-    }
-
-    public function executeComposer(string $command, array $options = []): array
-    {
-        $this->calls[] = ['executeComposer', [$command, $options]];
-        return ['ok'];
-    }
-
-    public function requirePackage(array | string $package, string $version = "", array $options = []): array
-    {
-        $this->calls[] = ['requirePackage', [$package, $version, $options]];
-        return ['required'];
-    }
-
-    public function outdated(bool $direct = false, array $options = []): array
-    {
-        $this->calls[] = ['outdated', [$direct, $options]];
-        return [['package' => 'p', 'version' => '1.0.0']];
-    }
-
-    public function updatesAvailable(bool $direct): bool
-    {
-        $this->calls[] = ['updatesAvailable', [$direct]];
-        return true;
-    }
-
-    public function dumpAutoload(array $options = []): bool
-    {
-        $this->calls[] = ['dumpAutoload', [$options]];
-        return true;
-    }
-
-    public function search(string $needle, array $options = []): array
-    {
-        $this->calls[] = ['search', [$needle, $options]];
-        return ['vendor/package' => 'desc'];
-    }
-
-    public function show(string $package = "", array $options = []): array
-    {
-        $this->calls[] = ['show', [$package, $options]];
-        return ['vendor/package 1.0.0'];
-    }
-
-    public function clearCache(): bool
-    {
-        $this->calls[] = ['clearCache', []];
-        return true;
-    }
-
-    public function getOutdatedPackages(): array
-    {
-        $this->calls[] = ['getOutdatedPackages', []];
-        return [['package' => 'p', 'version' => '1.1.0', 'oldVersion' => '1.0.0']];
-    }
-
-    public function why(string $package): array
-    {
-        $this->calls[] = ['why', [$package]];
-        return [['package' => 'vendor/package', 'version' => '1.0.0', 'constraint' => '^1.0']];
-    }
-
-    public function getVersions(): array
-    {
-        $this->calls[] = ['getVersions', []];
-        return ['vendor/package' => '1.0.0'];
     }
 }
