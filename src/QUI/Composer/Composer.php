@@ -93,8 +93,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * Executes a Composer command with given options and returns the result as an array.
      *
      * @param string $command The Composer command to execute.
-     * @param array $options (Optional) The options to be passed to the Composer command.
-     * @return array The result of executing the Composer command as an array.
+     * @param array<string, mixed> $options (Optional) The options to be passed to the Composer command.
+     * @return array<int, string> The result of executing the Composer command as an array.
      */
     public function executeComposer(string $command, array $options = []): array
     {
@@ -148,7 +148,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
     public function getVersions(): array
     {
@@ -170,8 +170,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes composers update command
      *
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<int, string>
      */
     public function update(array $options = []): array
     {
@@ -181,8 +181,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes composers install command
      *
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<int, string>
      */
     public function install(array $options = []): array
     {
@@ -192,10 +192,10 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Executes composers require command
      *
-     * @param array|string $package - Name of the package: i.E. 'quiqqer/core' or list of packages
+     * @param array<string>|string $package - Name of the package: i.E. 'quiqqer/core' or list of packages
      * @param string $version
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<int, string>
      */
     public function requirePackage(array | string $package, string $version = "", array $options = []): array
     {
@@ -206,8 +206,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * Executes composers' outdated command
      *
      * @param bool $direct
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<int, array{package: string, version: string}>
      */
     public function outdated(bool $direct = false, array $options = []): array
     {
@@ -228,8 +228,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Return the packages which could be updated
      *
-     * @return array
-     *
+     * @return array<int, array{package: string, version: string, oldVersion: string}>
      * @throws Exception
      */
     public function getOutdatedPackages(): array
@@ -250,7 +249,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Generates the autoloader files again without downloading anything
      *
-     * @param array $options
+     * @param array<string, mixed> $options
      *
      * @return bool - true on success
      */
@@ -262,12 +261,11 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Searches the repositories for the given needle
      *
-     * @param $needle
-     * @param array $options
-     *
-     * @return array - Returns an array in the format: array( packagename => description)
+     * @param string $needle
+     * @param array<string, mixed> $options
+     * @return array<string, string> - Returns an array in the format: array( packagename => description)
      */
-    public function search($needle, array $options = []): array
+    public function search(string $needle, array $options = []): array
     {
         return $this->Runner->search($needle, $options);
     }
@@ -276,9 +274,8 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * Lists all installed packages
      *
      * @param string $package
-     * @param array $options
-     *
-     * @return array - returns an array with all installed packages
+     * @param array<string, mixed> $options
+     * @return array<int, string> - returns an array with all installed packages
      */
     public function show(string $package = "", array $options = []): array
     {
@@ -317,11 +314,11 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
      * Executes the composer why command.
      * This commands displays why the package has been installed and which packages require it.
      *
-     * @param $package
+     * @param string $package
      *
-     * @return array
+     * @return array<int, array{package: string, version: string, constraint: string}>
      */
-    public function why($package): array
+    public function why(string $package): array
     {
         return $this->Runner->why($package);
     }

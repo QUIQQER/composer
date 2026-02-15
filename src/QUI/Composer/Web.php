@@ -160,7 +160,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             }
 
             $package = preg_replace('#( ){2,}#', "$1", $package);
-            $package = explode(' ', $package);
+            $package = explode(' ', (string)$package);
 
             $name = $package[0];
             $version = $package[1];
@@ -330,15 +330,31 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
             if (str_contains($line, ' => ')) {
                 $parts = explode(' (', $line);
+
+                if (!isset($parts[1])) {
+                    continue;
+                }
+
                 $package = $parts[0];
                 $versions = str_replace(')', '', $parts[1]);
 
                 // old version
                 $firstSpace = strpos($versions, ' ');
+
+                if ($firstSpace === false) {
+                    $firstSpace = strlen($versions);
+                }
+
                 $oldVersion = trim(substr($versions, 0, $firstSpace), '() ');
 
                 // new version
-                $newVersion = explode(' => ', $versions)[1];
+                $newVersionParts = explode(' => ', $versions);
+
+                if (!isset($newVersionParts[1])) {
+                    continue;
+                }
+
+                $newVersion = $newVersionParts[1];
                 $firstSpace = strpos($newVersion, ' ');
 
                 if ($firstSpace === false) {
@@ -349,21 +365,46 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
             } else {
                 $line = explode(' to ', $line);
 
+                if (!isset($line[1])) {
+                    continue;
+                }
+
                 // old version
                 $firstSpace = strpos($line[0], ' ');
-                $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+
+                if ($firstSpace === false) {
+                    $oldVersion = '';
+                } else {
+                    $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+                }
 
                 // new version
                 $firstSpace = strpos($line[1], ' ');
-                $newVersion = trim(substr($line[1], $firstSpace), '() ');
-                $package = trim(substr($line[1], 0, $firstSpace));
+
+                if ($firstSpace === false) {
+                    $newVersion = trim($line[1], '() ');
+                    $package = trim($line[1]);
+                } else {
+                    $newVersion = trim(substr($line[1], $firstSpace), '() ');
+                    $package = trim(substr($line[1], 0, $firstSpace));
+                }
 
                 if (str_contains($oldVersion, 'Reading ')) {
                     $packageStart = strpos($line[0], $package);
+
+                    if ($packageStart === false) {
+                        continue;
+                    }
+
                     $line[0] = substr($line[0], $packageStart);
 
                     $firstSpace = strpos($line[0], ' ');
-                    $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+
+                    if ($firstSpace === false) {
+                        $oldVersion = '';
+                    } else {
+                        $oldVersion = trim(substr($line[0], $firstSpace), '() ');
+                    }
                 }
             }
 
@@ -451,9 +492,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Lists all installed packages
      *
      * @param string $package
-     * @param array $options
-     *
-     * @return array - returns an array with all installed packages
+     * @param array<string, mixed> $options
+     * @return array<string> - returns an array with all installed packages
      * @throws Exception
      */
     public function show(string $package = "", array $options = []): array
@@ -469,7 +509,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         foreach ($result as $line) {
             // Replace all spaces (multiple or single) with a single space
             $line = preg_replace($regex, " ", $line);
-            $words = explode(" ", $line);
+            $words = explode(" ", (string)$line);
 
             if (
                 $words[0] != ""
@@ -525,12 +565,11 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * )
      * ```
      *
-     * @param $package
-     *
-     * @return array
+     * @param string $package
+     * @return array<int, array{package: string, version: string, constraint: string}>
      * @throws Exception
      */
-    public function why($package): array
+    public function why(string $package): array
     {
         $options['package'] = $package;
         $result = [];
@@ -583,8 +622,8 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      * Execute the composer
      *
      * @param string $command
-     * @param array $options
-     * @return array
+     * @param array<string, mixed> $options
+     * @return array<int, string>
      *
      * @throws QUI\Exception
      */

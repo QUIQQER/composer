@@ -49,8 +49,12 @@ class ArrayOutput extends Output
     protected function doWrite(string $message, bool $newline): void
     {
         $this->curLine .= $message;
+        $encodedMessage = json_encode($message);
 
-        if (strpos(json_encode($message), PHP_EOL) > 0 || strpos(json_encode($message), '\b') > 0) {
+        if (
+            $encodedMessage !== false
+            && (strpos($encodedMessage, PHP_EOL) > 0 || strpos($encodedMessage, '\b') > 0)
+        ) {
             $newline = true;
         }
 

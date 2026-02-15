@@ -68,7 +68,7 @@ interface ComposerInterface
     /**
      * Executes the composer require command
      *
-     * @param array<string, string> $package
+     * @param array<string> $package
      * @param string $version
      * @param array<string, mixed> $options
      * @return array<int, string> - The output of the command split into an array. One line per entry.
