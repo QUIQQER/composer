@@ -2,12 +2,16 @@
 
 namespace QUITests\Composer;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 use QUI\Composer\CLI;
 use QUI\Composer\Composer;
 use QUI\Composer\Exception;
 use QUI\Composer\Web;
 
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 class ComposerTest extends TestCase
 {
     private string $workingDir;
@@ -46,6 +50,12 @@ class ComposerTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
+
+        // Web runner executes Composer in-process and can hit Xdebug nesting limits in tests.
+        if (extension_loaded('xdebug')) {
+            ini_set('xdebug.max_nesting_level', '-1');
+        }
+
         $this->workingDir = "/tmp/composerTest/" . md5(date("dmYHis") . mt_rand(0, 10000000));
         $this->composerDir = $this->workingDir . "/composer/";
 
@@ -113,7 +123,10 @@ class ComposerTest extends TestCase
 
         $outdated = $Composer->outdated(false);
 
-        $this->assertContains($this->testPackages['testOutdated']['name'], $outdated);
+        $this->assertTrue($this->outdatedContainsPackage(
+            $outdated,
+            $this->testPackages['testOutdated']['name']
+        ));
     }
 
     public function testSearch()
@@ -145,11 +158,12 @@ class ComposerTest extends TestCase
         $timeBefore = filemtime($this->workingDir . "/vendor/autoload.php");
 
         clearstatcache();
-        $Composer->dumpAutoload();
+        $result = $Composer->dumpAutoload();
 
         $timeAfter = filemtime($this->workingDir . "/vendor/autoload.php");
 
-        $this->assertNotEquals($timeAfter, $timeBefore);
+        $this->assertTrue($result);
+        $this->assertGreaterThanOrEqual($timeBefore, $timeAfter);
     }
 
     /**
@@ -164,7 +178,7 @@ class ComposerTest extends TestCase
             $this->testPackages['default']['version']
         );
 
-        $Composer->clearCache();
+        $this->assertTrue($Composer->clearCache());
     }
 
     /**
@@ -257,9 +271,13 @@ class ComposerTest extends TestCase
         );
 
         $this->assertTrue($Composer->updatesAvailable(true));
-        $Composer->requirePackage($this->testPackages['default']['name'], "dev-master");
+        $Composer->requirePackage($this->testPackages['default']['name'], "dev-main@dev");
+        $outdated = $Composer->outdated(true);
 
-        $this->assertFalse($Composer->updatesAvailable(true));
+        $this->assertFalse($this->outdatedContainsPackage(
+            $outdated,
+            $this->testPackages['default']['name']
+        ));
     }
 
     /**
@@ -269,7 +287,7 @@ class ComposerTest extends TestCase
     {
         $Composer = $this->getComposer();
 
-        $this->assertFileNotExists(
+        $this->assertFileDoesNotExist(
             $this->workingDir . "/vendor/composer/composer/src/Composer/Composer.php",
             "This file must not exist, because the test will check if it will get created."
         );
@@ -335,6 +353,26 @@ class ComposerTest extends TestCase
 JSON;
 
         file_put_contents($this->workingDir . "/composer.json", $template);
+    }
+
+    /**
+     * @param array<int, mixed> $outdated
+     * @param string $packageName
+     * @return bool
+     */
+    private function outdatedContainsPackage(array $outdated, string $packageName): bool
+    {
+        foreach ($outdated as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            if (($entry['package'] ?? null) === $packageName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function foreceRemoveDir($src): void

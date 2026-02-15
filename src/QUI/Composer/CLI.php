@@ -8,6 +8,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
 use function array_filter;
+use function array_reverse;
+use function array_slice;
 use function chdir;
 use function chr;
 use function count;
@@ -26,6 +28,7 @@ use function preg_replace;
 use function putenv;
 use function rtrim;
 use function str_replace;
+use function stripos;
 use function strlen;
 use function strpos;
 use function substr;
@@ -704,6 +707,116 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $result = $this->runProcess($command);
         $output = $result['output'];
+
+        if ($result['successful'] === false) {
+            $errorLines = [];
+            $lines = explode(PHP_EOL, $output);
+            foreach ($lines as $key => $line) {
+                $line = trim($line);
+
+                if (!preg_match('/^\[[^\]]+\]$/', $line)) {
+                    continue;
+                }
+
+                for ($i = $key + 1; $i <= $key + 8; $i++) {
+                    if (!isset($lines[$i])) {
+                        break;
+                    }
+
+                    $candidate = trim($lines[$i]);
+
+                    if ($candidate === '' || $candidate === 'Exception trace:') {
+                        continue;
+                    }
+
+                    if (str_contains($candidate, '->') && str_contains($candidate, ' at ')) {
+                        continue;
+                    }
+
+                    $errorLines[] = $candidate;
+                    break;
+                }
+            }
+
+            $keywords = [
+                'error',
+                'failed',
+                'exception',
+                'could not',
+                'Your requirements could not be resolved',
+                'Installation failed'
+            ];
+
+            foreach (array_reverse($lines) as $line) {
+                $line = trim($line);
+
+                if ($line === '') {
+                    continue;
+                }
+
+                foreach ($keywords as $keyword) {
+                    if (stripos($line, $keyword) !== false) {
+                        $errorLines[] = $line;
+                        break;
+                    }
+                }
+
+                if (count($errorLines) >= 3) {
+                    break;
+                }
+            }
+
+            if (empty($errorLines)) {
+                foreach (array_reverse($lines) as $line) {
+                    $line = trim($line);
+
+                    if ($line === '') {
+                        continue;
+                    }
+
+                    $errorLines[] = $line;
+
+                    if (count($errorLines) >= 3) {
+                        break;
+                    }
+                }
+            }
+
+            $errorLines = array_reverse($errorLines);
+
+            $onlyGenericErrorLines = !empty($errorLines);
+
+            foreach ($errorLines as $errorLine) {
+                if ($errorLine !== '[Error]' && $errorLine !== 'Exception trace:') {
+                    $onlyGenericErrorLines = false;
+                    break;
+                }
+            }
+
+            if (empty($errorLines) || $onlyGenericErrorLines) {
+                $tail = [];
+
+                foreach ($lines as $line) {
+                    $line = trim($line);
+
+                    if ($line === '') {
+                        continue;
+                    }
+
+                    $tail[] = $line;
+                }
+
+                $errorLines = array_slice($tail, -8);
+            }
+
+            $message = 'Composer command "' . $cmd . '" failed';
+
+            if (!empty($errorLines)) {
+                $message .= ': ' . implode(' | ', $errorLines);
+            }
+
+            throw new Exception($message);
+        }
 
         // find exception
         if (str_contains($output, '[RuntimeException]')) {
