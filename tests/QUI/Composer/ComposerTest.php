@@ -10,6 +10,8 @@ use QUI\Composer\Composer;
 use QUI\Composer\Exception;
 use QUI\Composer\Web;
 
+use function ltrim;
+
 #[RunTestsInSeparateProcesses]
 #[PreserveGlobalState(false)]
 class ComposerTest extends TestCase
@@ -267,7 +269,7 @@ class ComposerTest extends TestCase
         # Check if package is installed in the correct version
         $this->assertEquals(
             $this->testPackages['testUpdate']['version2'],
-            $packages[$index]['version']
+            ltrim($packages[$index]['version'], 'v')
         );
     }
 
