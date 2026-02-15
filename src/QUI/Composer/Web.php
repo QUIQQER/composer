@@ -449,7 +449,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
 
             $split = explode(" ", $line, 2);
 
-            if (isset($split[0]) && isset($split[1])) {
+            if (isset($split[1])) {
                 $packages[$split[0]] = $split[1];
             }
         }

@@ -440,7 +440,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
             $split = explode(" ", $line, 2);
 
-            if (isset($split[0]) && isset($split[1])) {
+            if (isset($split[1])) {
                 $packages[$split[0]] = $split[1];
             }
         }
@@ -602,10 +602,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         // tokens
         if (!empty($tokens)) {
-            if (!is_array($tokens)) {
-                $tokens = [$tokens];
-            }
-
             foreach ($tokens as $token) {
                 $command .= ' ' . $token;
             }
@@ -677,10 +673,6 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         // tokens
         if (!empty($tokens)) {
-            if (!is_array($tokens)) {
-                $tokens = [$tokens];
-            }
-
             foreach ($tokens as $token) {
                 $command .= ' ' . $token;
             }
