@@ -6,7 +6,6 @@ use QUI;
 
 /**
  * Class ParserTest
- * @package QUITests\Composer
  */
 class ParserTest extends \PHPUnit\Framework\TestCase
 {
