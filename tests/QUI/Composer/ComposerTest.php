@@ -376,7 +376,7 @@ class ComposerTest extends TestCase
     "url": "http://www.pcsg.de"
   },
   "require": {
-    "composer/composer": "^1.1.0"
+    "composer/composer": "^2"
   }
 }
 JSON;

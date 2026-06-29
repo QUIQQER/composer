@@ -324,14 +324,14 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Return all outdated packages
      *
+     * @param array<string, mixed> $options
      * @return array<int, array{package: string, version: string, oldVersion: string}>
      * @throws Exception
      */
-    public function getOutdatedPackages(): array
+    public function getOutdatedPackages(array $options = []): array
     {
-        $output = $this->executeComposer('update', [
-            '--dry-run' => true
-        ]);
+        $options['--dry-run'] = true;
+        $output = $this->executeComposer('update', $options);
 
         // filter the output
         $result = [];
@@ -611,9 +611,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
                 continue;
             }
 
-            preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches);
-
-            if (!isset($matches[1]) || !isset($matches[2]) || !isset($matches[3])) {
+            if (preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches) !== 1) {
                 continue;
             }
 
