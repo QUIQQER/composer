@@ -572,9 +572,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
                 continue;
             }
 
-            preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches);
-
-            if (!isset($matches[1]) || !isset($matches[2]) || !isset($matches[5])) {
+            if (preg_match("~(\S+)\s*(\S+)\s*(\S+)\s*(\S+)\s*\((\S+)\)~", $line, $matches) !== 1) {
                 continue;
             }
 
