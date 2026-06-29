@@ -47,6 +47,7 @@ class ComposerUnitTest extends TestCase
         $this->assertSame([['package' => 'p', 'version' => '1.0.0']], $composer->outdated(true));
         $this->assertTrue($composer->updatesAvailable(true));
         $this->assertSame([['package' => 'p', 'version' => '1.1.0', 'oldVersion' => '1.0.0']], $composer->getOutdatedPackages());
+        $this->assertSame([['getOutdatedPackages', [[]]]], array_slice($runner->calls, -1));
         $this->assertTrue($composer->dumpAutoload());
         $this->assertSame(['vendor/package' => 'desc'], $composer->search('vendor'));
         $this->assertSame(['vendor/package 1.0.0'], $composer->show());
@@ -162,9 +163,9 @@ class ComposerUnitTest extends TestCase
                 return true;
             }
 
-            public function getOutdatedPackages(): array
+            public function getOutdatedPackages(array $options = []): array
             {
-                $this->calls[] = ['getOutdatedPackages', []];
+                $this->calls[] = ['getOutdatedPackages', [$options]];
                 return [['package' => 'p', 'version' => '1.1.0', 'oldVersion' => '1.0.0']];
             }
 

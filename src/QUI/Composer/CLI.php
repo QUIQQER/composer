@@ -288,14 +288,14 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Return the packages which could be updated
      *
+     * @param array<string, mixed> $options
      * @return array<int, array{package: string, version: string, oldVersion: string}>
      * @throws Exception
      */
-    public function getOutdatedPackages(): array
+    public function getOutdatedPackages(array $options = []): array
     {
-        $output = $this->execComposer('update', [
-            '--dry-run' => true
-        ]);
+        $options['--dry-run'] = true;
+        $output = $this->execComposer('update', $options);
 
         // filter the output
         $result = [];
@@ -864,7 +864,9 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         $optionString = "";
 
         foreach ($options as $option => $value) {
-            $option = "--" . ltrim($option, "--");
+            $option = str_starts_with((string)$option, '-')
+                ? (string)$option
+                : "--" . ltrim((string)$option, "--");
 
             if ($value === true) {
                 $optionString .= ' ' . escapeshellarg($option);

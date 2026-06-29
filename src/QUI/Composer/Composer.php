@@ -228,12 +228,13 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
     /**
      * Return the packages which could be updated
      *
+     * @param array<string, mixed> $options
      * @return array<int, array{package: string, version: string, oldVersion: string}>
      * @throws Exception
      */
-    public function getOutdatedPackages(): array
+    public function getOutdatedPackages(array $options = []): array
     {
-        return $this->Runner->getOutdatedPackages();
+        return $this->Runner->getOutdatedPackages($options);
     }
 
     /**
