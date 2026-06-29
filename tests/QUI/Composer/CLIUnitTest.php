@@ -105,12 +105,15 @@ class CLIUnitTest extends TestCase
 
         $optionString = $cli->callParentGetOptionString([
             '--flag' => true,
+            '-vvv' => true,
             'name' => 'value',
             'list' => ['a', 'b'],
             'off' => false
         ]);
 
         $this->assertNotEmpty($optionString);
+        $this->assertStringContainsString("'-vvv'", $optionString);
+        $this->assertStringNotContainsString('--vvv', $optionString);
         $this->assertStringContainsString('--name', $optionString);
         $this->assertStringContainsString('a;b', $optionString);
 
