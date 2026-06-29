@@ -27,16 +27,16 @@ class ComposerTest extends TestCase
         ],
         'testOutdated' => [
             'name' => "symfony/polyfill-ctype",
-            'version' => "1.10.0"
+            'version' => "1.32.0"
         ],
         'testUpdate' => [
             'name' => "symfony/polyfill-ctype",
-            'version' => "1.10.0",
+            'version' => "1.32.0",
             'version2' => "1.33.0"
         ],
         'default' => [
             'name' => "symfony/polyfill-ctype",
-            'version' => "1.10.0",
+            'version' => "1.32.0",
             'version2' => "1.33.0"
         ]
     ];
