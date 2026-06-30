@@ -78,12 +78,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     public function __construct(string $workingDir)
     {
-        // we must set argv params for composer
-        $_SERVER['argv'][0] = pathinfo(__FILE__, PATHINFO_BASENAME);
-        $_SERVER['argc'] = 1;
-
-        // we need that for hirak/prestissimo
-        $GLOBALS['argv'] = $_SERVER['argv'];
+        $this->resetArgv();
 
         if (!defined('STDIN')) {
             define('STDIN', fopen("php://stdin", "r"));
@@ -630,8 +625,24 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
      */
     protected function resetComposer(): void
     {
+        $this->resetArgv();
+
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
+    }
+
+    /**
+     * Keep Composer isolated from webserver process arguments.
+     */
+    protected function resetArgv(): void
+    {
+        // we must set argv params for composer
+        $_SERVER['argv'] = [pathinfo(__FILE__, PATHINFO_BASENAME)];
+        $_SERVER['argc'] = 1;
+
+        // we need that for hirak/prestissimo
+        $GLOBALS['argv'] = $_SERVER['argv'];
+        $GLOBALS['argc'] = 1;
     }
 
     /**
