@@ -10,6 +10,7 @@ use Symfony\Component\Process\Process;
 use function array_filter;
 use function array_reverse;
 use function array_slice;
+use function basename;
 use function chdir;
 use function chr;
 use function count;
@@ -20,6 +21,7 @@ use function function_exists;
 use function implode;
 use function is_array;
 use function is_dir;
+use function is_executable;
 use function is_null;
 use function is_string;
 use function php_sapi_name;
@@ -27,6 +29,7 @@ use function preg_match;
 use function preg_replace;
 use function putenv;
 use function rtrim;
+use function str_contains;
 use function str_replace;
 use function stripos;
 use function strlen;
@@ -34,7 +37,10 @@ use function strpos;
 use function substr;
 use function trim;
 
+use const PHP_BINDIR;
 use const PHP_EOL;
+use const PHP_MAJOR_VERSION;
+use const PHP_MINOR_VERSION;
 
 /**
  * Class CLI
@@ -126,9 +132,40 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $this->isFCGI();
-        $this->phpPath = PHP_BINARY . ' ';
+        $this->phpPath = $this->getCliPhpBinary(PHP_BINARY) . ' ';
 
         return $this->phpPath;
+    }
+
+    private function getCliPhpBinary(string $binary): string
+    {
+        $binaryName = basename($binary);
+
+        if (
+            !str_contains($binaryName, 'php-fpm')
+            && !str_contains($binaryName, 'php-cgi')
+            && !str_contains($binaryName, 'fpm')
+        ) {
+            return $binary;
+        }
+
+        $versionedBinary = 'php' . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+        $candidates = [
+            PHP_BINDIR . DIRECTORY_SEPARATOR . $versionedBinary,
+            PHP_BINDIR . DIRECTORY_SEPARATOR . 'php',
+            '/usr/bin/' . $versionedBinary,
+            '/usr/local/bin/' . $versionedBinary,
+            '/usr/bin/php',
+            '/usr/local/bin/php'
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_executable($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return 'php';
     }
 
     /**
