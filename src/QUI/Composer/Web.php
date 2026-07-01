@@ -36,6 +36,7 @@ use function strlen;
 use function strpos;
 use function substr;
 use function trim;
+use function class_exists;
 
 use const PATHINFO_BASENAME;
 
@@ -626,6 +627,7 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
     protected function resetComposer(): void
     {
         $this->resetArgv();
+        $this->disableHhvmDetection();
 
         $this->Application = new Application();
         $this->Application->setAutoExit(false);
@@ -643,6 +645,24 @@ class Web implements QUI\Composer\Interfaces\ComposerInterface
         // we need that for hirak/prestissimo
         $GLOBALS['argv'] = $_SERVER['argv'];
         $GLOBALS['argc'] = 1;
+    }
+
+    /**
+     * Composer's HHVM detector uses exec() to locate hhvm. Web environments can
+     * forbid forks, so HHVM detection must be disabled for the in-process runner.
+     */
+    protected function disableHhvmDetection(): void
+    {
+        if (!class_exists('Composer\Platform\HhvmDetector')) {
+            return;
+        }
+
+        try {
+            $Property = new \ReflectionProperty('Composer\Platform\HhvmDetector', 'hhvmVersion');
+            $Property->setAccessible(true);
+            $Property->setValue(false);
+        } catch (\Throwable) {
+        }
     }
 
     /**
