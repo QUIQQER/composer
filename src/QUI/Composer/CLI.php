@@ -10,6 +10,7 @@ use Symfony\Component\Process\Process;
 use function array_filter;
 use function array_reverse;
 use function array_slice;
+use function basename;
 use function chdir;
 use function chr;
 use function count;
@@ -17,9 +18,12 @@ use function defined;
 use function escapeshellarg;
 use function explode;
 use function function_exists;
+use function getcwd;
+use function ini_get;
 use function implode;
 use function is_array;
 use function is_dir;
+use function is_executable;
 use function is_null;
 use function is_string;
 use function php_sapi_name;
@@ -27,14 +31,21 @@ use function preg_match;
 use function preg_replace;
 use function putenv;
 use function rtrim;
+use function str_contains;
 use function str_replace;
+use function str_starts_with;
 use function stripos;
 use function strlen;
 use function strpos;
 use function substr;
 use function trim;
 
+use const DIRECTORY_SEPARATOR;
+use const PATH_SEPARATOR;
+use const PHP_BINDIR;
 use const PHP_EOL;
+use const PHP_MAJOR_VERSION;
+use const PHP_MINOR_VERSION;
 
 /**
  * Class CLI
@@ -126,9 +137,77 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         $this->isFCGI();
-        $this->phpPath = PHP_BINARY . ' ';
+        $this->phpPath = $this->getCliPhpBinary(PHP_BINARY) . ' ';
 
         return $this->phpPath;
+    }
+
+    private function getCliPhpBinary(string $binary): string
+    {
+        $binaryName = basename($binary);
+
+        if (
+            !str_contains($binaryName, 'php-fpm')
+            && !str_contains($binaryName, 'php-cgi')
+            && !str_contains($binaryName, 'fpm')
+        ) {
+            return $binary;
+        }
+
+        $versionedBinary = 'php' . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+        $candidates = [
+            PHP_BINDIR . DIRECTORY_SEPARATOR . $versionedBinary,
+            PHP_BINDIR . DIRECTORY_SEPARATOR . 'php',
+            '/usr/bin/' . $versionedBinary,
+            '/usr/local/bin/' . $versionedBinary,
+            '/usr/bin/php',
+            '/usr/local/bin/php'
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (!$this->isAllowedByOpenBaseDir($candidate)) {
+                continue;
+            }
+
+            if (@is_executable($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return 'php';
+    }
+
+    private function isAllowedByOpenBaseDir(string $path): bool
+    {
+        $openBaseDir = (string)ini_get('open_basedir');
+
+        if ($openBaseDir === '' || $path === '' || $path[0] !== DIRECTORY_SEPARATOR) {
+            return true;
+        }
+
+        foreach (explode(PATH_SEPARATOR, $openBaseDir) as $allowedPath) {
+            $allowedPath = trim($allowedPath);
+
+            if ($allowedPath === '') {
+                continue;
+            }
+
+            if ($allowedPath === '.') {
+                $allowedPath = (string)getcwd();
+            }
+
+            $allowedPath = rtrim($allowedPath, DIRECTORY_SEPARATOR);
+
+            if ($allowedPath === '') {
+                $allowedPath = DIRECTORY_SEPARATOR;
+            }
+
+            if ($path === $allowedPath || str_starts_with($path, $allowedPath . DIRECTORY_SEPARATOR)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -610,7 +689,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         chdir($this->workingDir);
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
-        $command = $this->getPHPPath() . ' ' . $this->composerDir . 'composer.phar';
+        $command = $this->getComposerCommand();
 
         if ($this->isFCGI()) {
             $command .= ' -d register_argc_argv=1';
@@ -678,8 +757,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         putenv("COMPOSER_HOME=" . $this->composerDir);
 
         // Parse output into an array and remove empty lines
-        $command = $this->getPHPPath();
-        $command .= $this->composerDir . 'composer.phar';
+        $command = $this->getComposerCommand();
 
         if ($this->isFCGI()) {
             $command .= ' -d register_argc_argv=1';
@@ -881,6 +959,11 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         }
 
         return $optionString;
+    }
+
+    private function getComposerCommand(): string
+    {
+        return rtrim((string)$this->getPHPPath()) . ' ' . escapeshellarg($this->composerDir . 'composer.phar');
     }
 
     /**

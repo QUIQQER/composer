@@ -9,6 +9,7 @@ namespace QUI\Composer;
 use QUI;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function php_sapi_name;
 use function rtrim;
 
 /**
@@ -71,7 +72,7 @@ class Composer implements QUI\Composer\Interfaces\ComposerInterface
         $this->composerDir = $this->workingDir;
         $this->Events = new QUI\Composer\Utils\Events();
 
-        if (QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
+        if (php_sapi_name() === 'cli' && QUI\Utils\System::isShellFunctionEnabled('shell_exec')) {
             $this->setMode(self::MODE_CLI);
         } else {
             $this->setMode(self::MODE_WEB);
