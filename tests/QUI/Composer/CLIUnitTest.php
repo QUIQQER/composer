@@ -120,6 +120,19 @@ class CLIUnitTest extends TestCase
         $this->assertIsBool($cli->callParentIsFCGI());
     }
 
+    public function testNormalizeProcessCommandRunsComposerPharThroughPhp(): void
+    {
+        $cli = $this->createCliDouble();
+
+        $tokens = $cli->callParentNormalizeProcessCommand(
+            ' ' . $this->workingDir . '/composer.phar update'
+        );
+
+        $this->assertNotSame($this->workingDir . '/composer.phar', $tokens[0]);
+        $this->assertSame($this->workingDir . '/composer.phar', $tokens[1]);
+        $this->assertSame('update', $tokens[2]);
+    }
+
     public function testAddEventStoresCallback(): void
     {
         $cli = $this->createCliDouble();
@@ -216,6 +229,11 @@ class CLIUnitTest extends TestCase
             public function callParentGetOptionString(array $options): string
             {
                 return parent::getOptionString($options);
+            }
+
+            public function callParentNormalizeProcessCommand(string $cmd): array
+            {
+                return parent::normalizeProcessCommand($cmd);
             }
 
             public function callParentIsFCGI(): ?bool
