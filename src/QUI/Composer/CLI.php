@@ -32,6 +32,7 @@ use function preg_replace;
 use function putenv;
 use function rtrim;
 use function str_contains;
+use function str_ends_with;
 use function str_replace;
 use function str_starts_with;
 use function stripos;
@@ -1009,6 +1010,12 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $cmd = explode(' ', $cmd);
         $cmd = array_filter($cmd);
+
+        $firstToken = (string)($cmd[0] ?? '');
+
+        if (str_ends_with($firstToken, 'composer.phar')) {
+            array_unshift($cmd, rtrim((string)$this->getPHPPath()) ?: 'php');
+        }
 
         $Process = new Process($cmd);
         $Process->setTimeout(0);
