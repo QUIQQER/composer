@@ -8,8 +8,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
 use function array_filter;
+use function array_values;
 use function array_reverse;
 use function array_slice;
+use function array_unshift;
 use function basename;
 use function chdir;
 use function chr;
@@ -1005,17 +1007,7 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
     {
         $output = '';
 
-        $cmd = str_replace("'", '', $cmd);
-        $cmd = str_replace("`", '', $cmd);
-
-        $cmd = explode(' ', $cmd);
-        $cmd = array_filter($cmd);
-
-        $firstToken = (string)($cmd[0] ?? '');
-
-        if (str_ends_with($firstToken, 'composer.phar')) {
-            array_unshift($cmd, rtrim((string)$this->getPHPPath()) ?: 'php');
-        }
+        $cmd = $this->normalizeProcessCommand($cmd);
 
         $Process = new Process($cmd);
         $Process->setTimeout(0);
@@ -1033,6 +1025,24 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
             'successful' => $Process->isSuccessful(),
             'output' => $output
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function normalizeProcessCommand(string $cmd): array
+    {
+        $cmd = str_replace("'", '', $cmd);
+        $cmd = str_replace("`", '', $cmd);
+
+        $tokens = array_values(array_filter(explode(' ', $cmd)));
+        $firstToken = (string)($tokens[0] ?? '');
+
+        if (str_ends_with($firstToken, 'composer.phar')) {
+            array_unshift($tokens, rtrim((string)$this->getPHPPath()) ?: 'php');
+        }
+
+        return $tokens;
     }
 
     //region events
