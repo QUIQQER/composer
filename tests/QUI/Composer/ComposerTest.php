@@ -17,8 +17,7 @@ use function ltrim;
 class ComposerTest extends TestCase
 {
     private string $workingDir;
-    private string $composerDir;
-    private int $mode = ComposerTest::MODE_WEB;
+    protected int $mode = ComposerTest::MODE_WEB;
 
     private array $testPackages = [
         'testRequire' => [
@@ -59,24 +58,13 @@ class ComposerTest extends TestCase
         }
 
         $this->workingDir = "/tmp/composerTest/" . md5(date("dmYHis") . mt_rand(0, 10000000));
-        $this->composerDir = $this->workingDir . "/composer/";
-
 
         if (!is_dir($this->workingDir)) {
             mkdir($this->workingDir, 0777, true);
         }
 
         if ($this->mode == self::MODE_CLI) {
-            if (!is_dir($this->composerDir)) {
-                mkdir($this->composerDir, 0777, true);
-            }
-
-            if (!is_file($this->composerDir . "/composer.phar")) {
-                copy(
-                    dirname(dirname(dirname(dirname(__FILE__)))) . "/lib/composer.phar",
-                    $this->composerDir . "/composer.phar"
-                );
-            }
+            $this->createComposerExecutable();
         }
 
         $this->createJson();
@@ -334,18 +322,40 @@ class ComposerTest extends TestCase
         $Composer = null;
         switch ($this->mode) {
             case self::MODE_AUTO:
-                $Composer = new Composer($this->workingDir, $this->composerDir);
+                $Composer = new Composer($this->workingDir);
                 break;
             case self::MODE_WEB:
                 $Composer = new Web($this->workingDir);
                 break;
             case self::MODE_CLI:
-                $Composer = new CLI($this->workingDir, $this->composerDir);
+                $Composer = new CLI($this->workingDir);
                 break;
         }
 
 
         return $Composer;
+    }
+
+    private function createComposerExecutable(): void
+    {
+        $classLoaderFile = (new \ReflectionClass(\Composer\Autoload\ClassLoader::class))->getFileName();
+
+        if (!is_string($classLoaderFile)) {
+            throw new \RuntimeException('Could not locate the Composer autoloader.');
+        }
+
+        $autoloadFile = dirname($classLoaderFile, 2) . '/autoload.php';
+
+        if (!is_file($autoloadFile)) {
+            throw new \RuntimeException('Could not locate the Composer autoload file.');
+        }
+
+        $script = sprintf(
+            "<?php\n\nrequire %s;\n\n(new Composer\\Console\\Application())->run();\n",
+            var_export($autoloadFile, true)
+        );
+
+        file_put_contents($this->workingDir . '/composer.phar', $script);
     }
 
     private function createJson(): void
