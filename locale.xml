@@ -4,14 +4,20 @@
         <locale name="package.title">
             <de><![CDATA[QUIQQER - Composer]]></de>
             <en><![CDATA[QUIQQER - Composer]]></en>
+            <es><![CDATA[QUIQQER - Composer]]></es>
+            <pt><![CDATA[QUIQQER - Composer]]></pt>
+            <fr><![CDATA[QUIQQER - Composer]]></fr>
+            <it><![CDATA[QUIQQER - Composer]]></it>
+            <pl><![CDATA[QUIQQER - Composer]]></pl>
         </locale>
         <locale name="package.description">
-            <de>
-                <![CDATA[Dieses Paket erweitert QUIQQER um eine Composer Schnittstelle, um Paketinstallationen und Updates direkt in der Oberfläche auszuführen. ]]>
-            </de>
-            <en>
-                <![CDATA[This package extends QUIQQER by a composer API to allow the user to install packages or update QUIQQER directly in the webinterface.]]>
-            </en>
+            <de><![CDATA[Dieses Paket erweitert QUIQQER um eine Composer Schnittstelle, um Paketinstallationen und Updates direkt in der Oberfläche auszuführen. ]]></de>
+            <en><![CDATA[This package extends QUIQQER with a Composer API that allows users to install packages or update QUIQQER directly in the web interface.]]></en>
+            <es><![CDATA[Este paquete añade a QUIQQER una interfaz de Composer para instalar paquetes y realizar actualizaciones directamente desde la interfaz web.]]></es>
+            <pt><![CDATA[Este pacote acrescenta ao QUIQQER uma interface do Composer para instalar pacotes e executar atualizações diretamente na interface web.]]></pt>
+            <fr><![CDATA[Ce paquet ajoute à QUIQQER une interface Composer permettant d’installer des paquets et d’effectuer des mises à jour directement depuis l’interface web.]]></fr>
+            <it><![CDATA[Questo pacchetto aggiunge a QUIQQER un’interfaccia Composer per installare pacchetti ed eseguire aggiornamenti direttamente dall’interfaccia web.]]></it>
+            <pl><![CDATA[Ten pakiet rozszerza QUIQQER o interfejs Composera umożliwiający instalowanie pakietów i wykonywanie aktualizacji bezpośrednio w interfejsie internetowym.]]></pl>
         </locale>
     </groups>
 </locales>
