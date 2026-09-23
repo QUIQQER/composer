@@ -1,6 +1,6 @@
 {
   "name": "quiqqer/composer",
-  "type": "quiqqer-plugin",
+  "type": "quiqqer-module",
   "description": "Composer API for the QUIQQER Framework",
   "license": "GPL-3.0-or-later",
   "authors": [
