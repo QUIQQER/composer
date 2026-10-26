@@ -5,6 +5,7 @@ namespace QUI\Composer;
 use QUI;
 use QUI\Composer\Utils\Events;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Process\Process;
 
 use function array_filter;
@@ -12,6 +13,7 @@ use function array_values;
 use function array_reverse;
 use function array_slice;
 use function array_unshift;
+use function array_splice;
 use function basename;
 use function chdir;
 use function chr;
@@ -23,6 +25,7 @@ use function function_exists;
 use function getcwd;
 use function ini_get;
 use function implode;
+use function in_array;
 use function is_array;
 use function is_dir;
 use function is_executable;
@@ -1009,6 +1012,15 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
 
         $cmd = $this->normalizeProcessCommand($cmd);
 
+        if (
+            $this->directOutput
+            && $this->supportsAnsiOutput()
+            && !in_array('--ansi', $cmd, true)
+            && !in_array('--no-ansi', $cmd, true)
+        ) {
+            array_splice($cmd, 2, 0, ['--ansi']);
+        }
+
         $Process = new Process($cmd);
         $Process->setTimeout(0);
 
@@ -1023,8 +1035,18 @@ class CLI implements QUI\Composer\Interfaces\ComposerInterface
         return [
             'Process' => $Process,
             'successful' => $Process->isSuccessful(),
-            'output' => $output
+            // Keep machine-readable results free of terminal formatting.
+            'output' => preg_replace('/\x1b\[[0-9;]*m/', '', $output) ?? $output
         ];
+    }
+
+    protected function supportsAnsiOutput(): bool
+    {
+        if (php_sapi_name() !== 'cli' || !defined('STDOUT')) {
+            return false;
+        }
+
+        return (new StreamOutput(STDOUT))->isDecorated();
     }
 
     /**
